@@ -17,7 +17,6 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, figsize, log, title, cmap
   # Sample  Tags    Caller  DP      AF      Error   Variants        Multiplier      Signature.1     ...    Signature.30
   included = total = 0
   results = {}
-  tags = set()
   xvals = set()
   yvals = set()
   max_zval = 0.0
@@ -40,7 +39,6 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, figsize, log, title, cmap
     total += 1
 
   logging.info('finished reading %i of %i records with max_zval %.2f', included, total, max_zval)
-  logging.debug('tags: %s', ' '.join(sorted(list(tags))))
 
   if len(results) == 0:
     logging.warn('No data to plot')

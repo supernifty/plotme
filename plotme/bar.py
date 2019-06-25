@@ -13,11 +13,14 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
-def plot_bar(data_fh, target, xlabel, ylabel, zlabel, figsize, title, x_label, y_label):
+def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label):
   '''
     xlabel: groups on x axis
   '''
   logging.info('starting...')
+
+  import matplotlib.style
+  matplotlib.style.use('seaborn')
 
   included = total = 0
   results = {}
@@ -52,26 +55,41 @@ def plot_bar(data_fh, target, xlabel, ylabel, zlabel, figsize, title, x_label, y
 
   #fig, ax = plt.subplots()
 
-  fig_width = len(xvals) * len(yvals)
+  fig_width = min(18, max(9, len(xvals) * len(yvals)))
   fig = plt.figure(figsize=(fig_width, fig_width * 0.7))
   ax = fig.add_subplot(111)
 
-  width = 0.7
+  width = 6 / fig_width
   ind = np.arange(len(xvals)) * fig_width / len(xvals)  # the x locations for the groups
-  logging.debug('ind is %s, width is %f', ind, width)
+  logging.debug('ind is %s, width is %f fig_width is %f', ind, width, fig_width)
 
   for idx in range(len(yvals)):
     offset = idx * width - (len(yvals) - 1) * width / 2
     vals = [results['{},{}'.format(x, yvals[idx])] for x in xvals]
     logging.debug('adding values %s for %s at %s', vals, yvals[idx], ind + offset)
     rects = ax.bar(ind + offset, vals, width, label=yvals[idx]) 
+    for rect in rects:
+      height = rect.get_height()
+      ax.annotate('{}'.format(height),
+        xy=(rect.get_x() + rect.get_width() / 2, height),
+        xytext=(0, 3),  # use 3 points offset
+        textcoords="offset points",  # in both directions
+        ha='center', va='bottom')
 
   # Add some text for labels, title and custom x-axis tick labels, etc.
-  ax.set_ylabel(y_label)
+  if y_label is not None:
+    ax.set_ylabel(y_label)
+  if x_label is not None:
+    ax.set_xlabel(x_label)
   ax.set_title(title)
   ax.set_xticks(ind)
   ax.set_xticklabels(xvals)
-  ax.legend(loc='upper right')
+  #ax.legend(loc='upper right')
+
+  # place legend at right based on https://stackoverflow.com/questions/10101700/moving-matplotlib-legend-outside-of-the-axis-makes-it-cutoff-by-the-figure-box/10154763#10154763
+  handles, labels = ax.get_legend_handles_labels()
+  lgd = ax.legend(handles, labels, loc='upper left', bbox_to_anchor=(1.01,1.0), borderaxespad=0)
+  lgd.get_frame().set_edgecolor('#000000')
 
   #fig = plt.figure(figsize=(figsize, 1 + int(figsize * len(yvals) / len(xvals))))
   #ax = fig.add_subplot(111)
@@ -87,9 +105,8 @@ if __name__ == '__main__':
   parser.add_argument('--y', required=True, help='y column name')
   parser.add_argument('--z', required=True, help='z column name')
   parser.add_argument('--title', required=False, help='z column name')
-  parser.add_argument('--x_label', required=False, help='label on x axis')
   parser.add_argument('--y_label', required=False, help='label on y axis')
-  parser.add_argument('--figsize', required=False, default=12, type=int, help='figsize width')
+  parser.add_argument('--x_label', required=False, help='label on x axis')
   parser.add_argument('--verbose', action='store_true', help='more logging')
   parser.add_argument('--target', required=False, default='plot.png', help='plot filename')
   args = parser.parse_args()
@@ -98,5 +115,5 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_bar(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.title, args.x_label, args.y_label)
+  plot_bar(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label)
 

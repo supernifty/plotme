@@ -11,30 +11,41 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
-def plot_heat(data_fh, target, xlabel, ylabel, zlabel, figsize, log, title, cmap, text_switch, x_label, y_label):
+def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, log, title, cmap, text_switch, x_label, y_label, is_numeric):
   logging.info('starting...')
 
-  # Sample  Tags    Caller  DP      AF      Error   Variants        Multiplier      Signature.1     ...    Signature.30
   included = total = 0
   results = {}
+  text = {}
   xvals = set()
   yvals = set()
   max_zval = 0.0
   for row in csv.DictReader(data_fh, delimiter='\t'):
     try:
       included += 1
-      xval = float(row[xlabel]) # x axis value
-      yval = float(row[ylabel]) # y axis value
+      if is_numeric:
+        xval = float(row[xlabel]) # x axis value
+        yval = float(row[ylabel]) # y axis value
+      else:
+        xval = row[xlabel] # x axis value
+        yval = row[ylabel] # y axis value
       xvals.add(xval)
       yvals.add(yval)
       if log:
         zval = math.log(float(row[zlabel]) + 1.0)
       else:
         zval = float(row[zlabel])
-      results['{},{}'.format(xval, yval)] = zval
       max_zval = max(max_zval, zval)
+      results['{},{}'.format(xval, yval)] = zval
+
+      if textlabel is None:
+        text['{},{}'.format(xval, yval)] = '{:.2f}'.format(zval)
+      else:
+        text['{},{}'.format(xval, yval)] = row[textlabel]
+        
     except:
-      logging.debug('Failed to include %s', row)
+      logging.warn('Failed to include (is %s numeric?) %s', zlabel, row)
+      raise
 
     total += 1
 
@@ -45,7 +56,10 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, figsize, log, title, cmap
     return
 
   xvals = sorted(list(xvals))
-  yvals = sorted(list(yvals))[::-1] # bottom left
+  if is_numeric:
+    yvals = sorted(list(yvals))[::-1] # bottom left
+  else:
+    yvals = sorted(list(yvals))
 
   zvals = []
   tvals = []
@@ -57,7 +71,7 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, figsize, log, title, cmap
       key = '{},{}'.format(x, y)
       if key in results:
         zrow.append(results[key])
-        trow.append('{:.2f}'.format(results[key]))
+        trow.append(text[key])
       else:
         zrow.append(0.0)
         trow.append('')
@@ -111,6 +125,7 @@ if __name__ == '__main__':
   parser.add_argument('--x', required=True, help='x column name')
   parser.add_argument('--y', required=True, help='y column name')
   parser.add_argument('--z', required=True, help='z column name')
+  parser.add_argument('--text', required=False, help='text if different to z')
   parser.add_argument('--title', required=False, help='z column name')
   parser.add_argument('--x_label', required=False, help='label on x axis')
   parser.add_argument('--y_label', required=False, help='label on y axis')
@@ -119,6 +134,7 @@ if __name__ == '__main__':
   parser.add_argument('--text_switch', required=False, default=0.5, type=float, help='where to change text colour')
   parser.add_argument('--log', action='store_true', help='log z')
   parser.add_argument('--verbose', action='store_true', help='more logging')
+  parser.add_argument('--is_numeric', action='store_true', help='axis are numeric')
   parser.add_argument('--target', required=False, default='plot.png', help='plot filename')
   args = parser.parse_args()
   if args.verbose:
@@ -126,4 +142,4 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_heat(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.log, args.title, args.cmap, args.text_switch, args.x_label, args.y_label)
+  plot_heat(sys.stdin, args.target, args.x, args.y, args.z, args.text, args.figsize, args.log, args.title, args.cmap, args.text_switch, args.x_label, args.y_label, args.is_numeric)

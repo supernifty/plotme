@@ -11,7 +11,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
-def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, log, title, cmap, text_switch, x_label, y_label, is_numeric):
+def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, log, title, cmap, text_switch, x_label, y_label, is_numeric, x_map, y_map, x_order, y_order):
   logging.info('starting...')
 
   included = total = 0
@@ -20,6 +20,19 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, log, 
   xvals = set()
   yvals = set()
   max_zval = 0.0
+
+  xmap = {}
+  if x_map is not None:
+    for item in x_map:
+      provided, actual = item.split('=')
+      xmap[provided] = actual
+
+  ymap = {}
+  if y_map is not None:
+    for item in y_map:
+      provided, actual = item.split('=')
+      ymap[provided] = actual
+
   for row in csv.DictReader(data_fh, delimiter='\t'):
     try:
       included += 1
@@ -29,6 +42,13 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, log, 
       else:
         xval = row[xlabel] # x axis value
         yval = row[ylabel] # y axis value
+
+      # use provided labels if provided
+      if xval in xmap:
+        xval = xmap[xval]
+      if yval in ymap:
+        yval = ymap[yval]
+
       xvals.add(xval)
       yvals.add(yval)
       if log:
@@ -55,11 +75,18 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, log, 
     logging.warn('No data to plot')
     return
 
-  xvals = sorted(list(xvals))
-  if is_numeric:
-    yvals = sorted(list(yvals))[::-1] # bottom left
+  if x_order is not None and len(x_order) > 0:
+    xvals = x_order
   else:
-    yvals = sorted(list(yvals))
+    xvals = sorted(list(xvals))
+
+  if y_order is not None and len(y_order) > 0:
+    yvals = y_order
+  else:
+    if is_numeric:
+      yvals = sorted(list(yvals))[::-1] # bottom left
+    else:
+      yvals = sorted(list(yvals))
 
   zvals = []
   tvals = []
@@ -136,10 +163,14 @@ if __name__ == '__main__':
   parser.add_argument('--verbose', action='store_true', help='more logging')
   parser.add_argument('--is_numeric', action='store_true', help='axis are numeric')
   parser.add_argument('--target', required=False, default='plot.png', help='plot filename')
+  parser.add_argument('--x_map', required=False, nargs='*', help='provided label=actual label')
+  parser.add_argument('--y_map', required=False, nargs='*', help='provided label=actual label')
+  parser.add_argument('--x_order', required=False, nargs='*', help='actual1 actual2...')
+  parser.add_argument('--y_order', required=False, nargs='*', help='actual1 actual2...')
   args = parser.parse_args()
   if args.verbose:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.DEBUG)
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_heat(sys.stdin, args.target, args.x, args.y, args.z, args.text, args.figsize, args.log, args.title, args.cmap, args.text_switch, args.x_label, args.y_label, args.is_numeric)
+  plot_heat(sys.stdin, args.target, args.x, args.y, args.z, args.text, args.figsize, args.log, args.title, args.cmap, args.text_switch, args.x_label, args.y_label, args.is_numeric, args.x_map, args.y_map, args.x_order, args.y_order)

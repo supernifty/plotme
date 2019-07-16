@@ -11,7 +11,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
-def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, log, title, cmap, text_switch, x_label, y_label, is_numeric, x_map, y_map, x_order, y_order):
+def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fontsize, log, title, cmap, text_switch, x_label, y_label, is_numeric, x_map, y_map, x_order, y_order):
   logging.info('starting...')
 
   included = total = 0
@@ -105,6 +105,7 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, log, 
     zvals.append(zrow)
     tvals.append(trow)
 
+  matplotlib.rcParams.update({'font.size': fontsize})
   fig = plt.figure(figsize=(figsize, 1 + int(figsize * len(yvals) / len(xvals))))
   ax = fig.add_subplot(111)
   if cmap is None:
@@ -112,7 +113,7 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, log, 
   else:
     im = ax.imshow(zvals, cmap=cmap)
 
-  cbar = ax.figure.colorbar(im, ax=ax, fraction=0.04, pad=0.01, shrink=0.9)
+  cbar = ax.figure.colorbar(im, ax=ax, fraction=0.04, pad=0.01, shrink=0.5)
   cbar.ax.set_ylabel(zlabel, rotation=-90, va="bottom")
 
   ax.set_xticks(range(len(xvals)))
@@ -158,6 +159,7 @@ if __name__ == '__main__':
   parser.add_argument('--y_label', required=False, help='label on y axis')
   parser.add_argument('--cmap', required=False, help='cmap name')
   parser.add_argument('--figsize', required=False, default=12, type=int, help='figsize width')
+  parser.add_argument('--fontsize', required=False, default=18, type=int, help='fontsize')
   parser.add_argument('--text_switch', required=False, default=0.5, type=float, help='where to change text colour')
   parser.add_argument('--log', action='store_true', help='log z')
   parser.add_argument('--verbose', action='store_true', help='more logging')
@@ -173,4 +175,4 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_heat(sys.stdin, args.target, args.x, args.y, args.z, args.text, args.figsize, args.log, args.title, args.cmap, args.text_switch, args.x_label, args.y_label, args.is_numeric, args.x_map, args.y_map, args.x_order, args.y_order)
+  plot_heat(sys.stdin, args.target, args.x, args.y, args.z, args.text, args.figsize, args.fontsize, args.log, args.title, args.cmap, args.text_switch, args.x_label, args.y_label, args.is_numeric, args.x_map, args.y_map, args.x_order, args.y_order)

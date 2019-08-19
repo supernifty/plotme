@@ -11,6 +11,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
+import plotme.settings
+
 def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fontsize, log, title, cmap, text_switch, x_label, y_label, is_numeric, x_map, y_map, x_order, y_order):
   logging.info('starting...')
 
@@ -145,7 +147,7 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fonts
 
   logging.info('done processing %i of %i', included, total)
   plt.tight_layout()
-  plt.savefig(target)
+  plt.savefig(target, dpi=plotme.settings.DPI)
   matplotlib.pyplot.close('all')
 
 if __name__ == '__main__':
@@ -158,7 +160,7 @@ if __name__ == '__main__':
   parser.add_argument('--x_label', required=False, help='label on x axis')
   parser.add_argument('--y_label', required=False, help='label on y axis')
   parser.add_argument('--cmap', required=False, help='cmap name')
-  parser.add_argument('--figsize', required=False, default=12, type=int, help='figsize width')
+  parser.add_argument('--figsize', required=False, default=12, type=float, help='figsize width')
   parser.add_argument('--fontsize', required=False, default=18, type=int, help='fontsize')
   parser.add_argument('--text_switch', required=False, default=0.5, type=float, help='where to change text colour')
   parser.add_argument('--log', action='store_true', help='log z')

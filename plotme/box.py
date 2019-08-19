@@ -14,7 +14,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
-def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order):
+def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize):
   '''
     xlabel: groups on x axis
     ylabel: colours
@@ -63,22 +63,24 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
 
   #fig, ax = plt.subplots()
 
-  fig_width = min(18, max(6, len(xvals) * len(yvals)))
-  fig = plt.figure(figsize=(fig_width, fig_width * 0.7))
+  #fig_width = min(18, max(6, len(xvals) * len(yvals)))
+  #fig = plt.figure(figsize=(fig_width, fig_width * 0.7))
+  rcParams.update({'font.size': fontsize})
+  fig = plt.figure(figsize=(fig_width, fig_height))
   ax = fig.add_subplot(111)
 
-  width = 6 / fig_width
-  ind = 1 + np.arange(len(xvals)) * fig_width / len(xvals)  # the x locations for the groups
+  width = fig_width / len(xvals) / len(yvals) # max width of each bar
+  ind = np.arange(len(xvals)) * fig_width / len(xvals)  # the x locations for the groups
   logging.debug('ind is %s, width is %f fig_width is %f', ind, width, fig_width)
 
   boxes = []
   for idx in range(len(yvals)):
-    offset = idx * width - (len(yvals) - 1) * width / 2
+    offset = idx * width * 0.9 - (len(yvals) - 1) * width / 2 # offset of each bar compared to ind (x centre for each group)
     vals = [results['{},{}'.format(x, yvals[idx])] for x in xvals]
     logging.debug('adding values %s for %s at %s %s', vals, yvals[idx], ind, offset)
     #rects = ax.bar(ind + offset, vals, width, label=yvals[idx]) 
     for c, val in enumerate(vals):
-      rects = ax.boxplot(val, notch=0, sym='+', vert=1, whis=1.5, positions=[ind[c] + offset], widths=width * 0.9, patch_artist=True, boxprops=dict(facecolor="C{}".format(idx)), medianprops=dict(color='#000000'))
+      rects = ax.boxplot(val, notch=0, sym='+', vert=1, whis=1.5, positions=[ind[c] + offset], widths=width * 0.85, patch_artist=True, boxprops=dict(facecolor="C{}".format(idx)), medianprops=dict(color='#000000'))
       boxes.append(rects)
     #for rect in rects:
     #  height = rect.get_height()
@@ -126,11 +128,14 @@ if __name__ == '__main__':
   parser.add_argument('--y_order', required=False, nargs='*', help='order of y axis')
   parser.add_argument('--verbose', action='store_true', help='more logging')
   parser.add_argument('--target', required=False, default='plot.png', help='plot filename')
+  parser.add_argument('--height', required=False, type=float, default=8, help='height of plot')
+  parser.add_argument('--width', required=False, type=float, default=12, help='width of plot')
+  parser.add_argument('--fontsize', required=False, type=float, default=8, help='font size')
   args = parser.parse_args()
   if args.verbose:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.DEBUG)
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order)
+  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize)
 

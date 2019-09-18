@@ -13,7 +13,7 @@ from pylab import rcParams
 
 import plotme.settings
 
-def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fontsize, log, title, cmap, text_switch, x_label, y_label, is_numeric, x_map, y_map, x_order, y_order):
+def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fontsize, log, title, cmap, text_switch, x_label, y_label, is_numeric, x_map, y_map, x_order, y_order, x_highlight, colorbar_label):
   logging.info('starting...')
 
   included = total = 0
@@ -27,6 +27,8 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fonts
   if x_map is not None:
     for item in x_map:
       provided, actual = item.split('=')
+      actual = actual.replace('_', '\n')
+      logging.debug(actual)
       xmap[provided] = actual
 
   ymap = {}
@@ -48,8 +50,12 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fonts
       # use provided labels if provided
       if xval in xmap:
         xval = xmap[xval]
+      elif len(xmap) > 0:
+        logging.debug('xval %s not in xmap %s', xval, xmap)
       if yval in ymap:
         yval = ymap[yval]
+      elif len(ymap) > 0:
+        logging.debug('yval %s not in ymap %s', yval, ymap)
 
       xvals.add(xval)
       yvals.add(yval)
@@ -58,12 +64,12 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fonts
       else:
         zval = float(row[zlabel])
       max_zval = max(max_zval, zval)
-      results['{},{}'.format(xval, yval)] = zval
+      results['{}|{}'.format(xval, yval)] = zval
 
       if textlabel is None:
-        text['{},{}'.format(xval, yval)] = '{:.2f}'.format(zval)
+        text['{}|{}'.format(xval, yval)] = '{:.2f}'.format(zval)
       else:
-        text['{},{}'.format(xval, yval)] = row[textlabel]
+        text['{}|{}'.format(xval, yval)] = row[textlabel]
         
     except:
       logging.warn('Failed to include (is %s numeric?) %s', zlabel, row)
@@ -72,13 +78,14 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fonts
     total += 1
 
   logging.info('finished reading %i of %i records with max_zval %.2f', included, total, max_zval)
+  logging.debug('results %s', results)
 
   if len(results) == 0:
     logging.warn('No data to plot')
     return
 
   if x_order is not None and len(x_order) > 0:
-    xvals = x_order
+    xvals = [x.replace('_', '\n') for x in x_order]
   else:
     xvals = sorted(list(xvals))
 
@@ -97,7 +104,7 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fonts
     zrow = []
     trow = []
     for x in xvals:
-      key = '{},{}'.format(x, y)
+      key = '{}|{}'.format(x, y)
       if key in results:
         zrow.append(results[key])
         trow.append(text[key])
@@ -116,11 +123,17 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fonts
     im = ax.imshow(zvals, cmap=cmap)
 
   cbar = ax.figure.colorbar(im, ax=ax, fraction=0.04, pad=0.01, shrink=0.5)
-  cbar.ax.set_ylabel(zlabel, rotation=-90, va="bottom")
+  if colorbar_label is None:
+    colorbar_labe = zlabel
+  cbar.ax.set_ylabel(colorbar_label, rotation=-90, va="bottom")
 
   ax.set_xticks(range(len(xvals)))
   ax.set_yticks(range(len(yvals)))
-  ax.set_xticklabels(xvals)
+  ax.set_xticklabels(xvals) #, linespacing=2.0)
+  if x_highlight is not None:
+    for idx, xval in enumerate(xvals):
+      if xval in x_highlight:
+        ax.get_xticklabels()[idx].set_weight("bold")
   ax.set_yticklabels(yvals)
 
   if y_label is None:
@@ -147,7 +160,7 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fonts
 
   logging.info('done processing %i of %i', included, total)
   plt.tight_layout()
-  plt.savefig(target, dpi=plotme.settings.DPI)
+  plt.savefig(target, dpi=plotme.settings.DPI, transparent=True)
   matplotlib.pyplot.close('all')
 
 if __name__ == '__main__':
@@ -160,6 +173,7 @@ if __name__ == '__main__':
   parser.add_argument('--x_label', required=False, help='label on x axis')
   parser.add_argument('--y_label', required=False, help='label on y axis')
   parser.add_argument('--cmap', required=False, help='cmap name')
+  parser.add_argument('--colorbar_label', required=False, help='label on colorbar')
   parser.add_argument('--figsize', required=False, default=12, type=float, help='figsize width')
   parser.add_argument('--fontsize', required=False, default=18, type=int, help='fontsize')
   parser.add_argument('--text_switch', required=False, default=0.5, type=float, help='where to change text colour')
@@ -171,10 +185,11 @@ if __name__ == '__main__':
   parser.add_argument('--y_map', required=False, nargs='*', help='provided label=actual label')
   parser.add_argument('--x_order', required=False, nargs='*', help='actual1 actual2...')
   parser.add_argument('--y_order', required=False, nargs='*', help='actual1 actual2...')
+  parser.add_argument('--x_highlight', required=False, nargs='*', help='xval1 xval2...')
   args = parser.parse_args()
   if args.verbose:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.DEBUG)
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_heat(sys.stdin, args.target, args.x, args.y, args.z, args.text, args.figsize, args.fontsize, args.log, args.title, args.cmap, args.text_switch, args.x_label, args.y_label, args.is_numeric, args.x_map, args.y_map, args.x_order, args.y_order)
+  plot_heat(sys.stdin, args.target, args.x, args.y, args.z, args.text, args.figsize, args.fontsize, args.log, args.title, args.cmap, args.text_switch, args.x_label, args.y_label, args.is_numeric, args.x_map, args.y_map, args.x_order, args.y_order, args.x_highlight, args.colorbar_label)

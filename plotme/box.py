@@ -69,8 +69,8 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
   fig = plt.figure(figsize=(fig_width, fig_height))
   ax = fig.add_subplot(111)
 
-  width = fig_width / len(xvals) / len(yvals) # max width of each bar
-  ind = np.arange(len(xvals)) * fig_width / len(xvals)  # the x locations for the groups
+  width = fig_width / len(xvals) / len(yvals) * 0.9 # max width of each bar
+  ind = width * len(yvals) / 2 + np.arange(len(xvals)) * fig_width / len(xvals)  # the x locations for the groups
   logging.debug('ind is %s, width is %f fig_width is %f', ind, width, fig_width)
 
   boxes = []

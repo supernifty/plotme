@@ -14,7 +14,9 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
-def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize):
+DPI=300
+
+def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, significance, significance_nobar):
   '''
     xlabel: groups on x axis
     ylabel: colours
@@ -74,13 +76,16 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
   logging.debug('ind is %s, width is %f fig_width is %f', ind, width, fig_width)
 
   boxes = []
+  positions = []
   for idx in range(len(yvals)):
     offset = idx * width * 0.9 - (len(yvals) - 1) * width / 2 # offset of each bar compared to ind (x centre for each group)
     vals = [results['{},{}'.format(x, yvals[idx])] for x in xvals]
     logging.debug('adding values %s for %s at %s %s', vals, yvals[idx], ind, offset)
     #rects = ax.bar(ind + offset, vals, width, label=yvals[idx]) 
     for c, val in enumerate(vals):
-      rects = ax.boxplot(val, notch=0, sym='+', vert=1, whis=1.5, positions=[ind[c] + offset], widths=width * 0.85, patch_artist=True, boxprops=dict(facecolor="C{}".format(idx)), medianprops=dict(color='#000000'))
+      position = [ind[c] + offset]
+      rects = ax.boxplot(val, notch=0, sym='+', vert=1, whis=1.5, positions=position, widths=width * 0.85, patch_artist=True, boxprops=dict(facecolor="C{}".format(idx)), medianprops=dict(color='#000000'))
+      positions.extend(position)
       boxes.append(rects)
     #for rect in rects:
     #  height = rect.get_height()
@@ -89,6 +94,18 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
     #    xytext=(0, 3),  # use 3 points offset
     #    textcoords="offset points",  # in both directions
     #    ha='center', va='bottom')
+
+  # add significance if included
+  if significance is not None:
+    for sig in significance:
+      col1, col2, text = sig.split(',', 2)
+      x1, x2 = positions[int(col1)], positions[int(col2)]
+      y, h, col = max_zval + 0.01, 0.01, 'k'
+      if significance_nobar:
+        plt.plot([x1, x1, x2, x2], [y, y+h, y+h, y], lw=0.8, c=col, alpha=0)
+      else:
+        plt.plot([x1, x1, x2, x2], [y, y+h, y+h, y], lw=0.8, c=col)
+      plt.text((x1+x2)*.5, y+h, text, ha='center', va='bottom', color=col, fontdict={'size': 8})
 
   # Add some text for labels, title and custom x-axis tick labels, etc.
   if y_label is not None:
@@ -113,7 +130,7 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
 
   logging.info('done processing %i of %i', included, total)
   plt.tight_layout()
-  plt.savefig(target)
+  plt.savefig(target, dpi=DPI)
   matplotlib.pyplot.close('all')
 
 if __name__ == '__main__':
@@ -131,11 +148,13 @@ if __name__ == '__main__':
   parser.add_argument('--height', required=False, type=float, default=8, help='height of plot')
   parser.add_argument('--width', required=False, type=float, default=12, help='width of plot')
   parser.add_argument('--fontsize', required=False, type=float, default=8, help='font size')
+  parser.add_argument('--significance', required=False, nargs='*', help='add significance of the form col1,col2,text... column numbering follows all leftmost columns from each group, then the next leftmost, finishes with all rightmost')
+  parser.add_argument('--significance_nobar', action='store_true', help='do not include bars')
   args = parser.parse_args()
   if args.verbose:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.DEBUG)
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize)
+  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.significance, args.significance_nobar)
 

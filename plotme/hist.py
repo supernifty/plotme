@@ -18,7 +18,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
-def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fig_width, fig_height, fontsize):
+def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fig_width, fig_height, fontsize, bins):
   '''
   '''
   logging.info('starting...')
@@ -50,7 +50,10 @@ def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fi
   ax = fig.add_subplot(111)
 
   for key in sorted(results.keys()):
-    ax.hist(results[key], label=key, alpha=0.5)
+    if bins is None:
+      ax.hist(results[key], label=key, alpha=0.4)
+    else:
+      ax.hist(results[key], label=key, alpha=0.4, bins=int(bins), stacked=False)
   #plt.hist([ads, ads_nopass], label=('PASS', 'No PASS'), bins=int(max(ads + ads_nopass) * 100), stacked=False)
 
   # Add some text for labels, title and custom x-axis tick labels, etc.
@@ -78,6 +81,7 @@ if __name__ == '__main__':
   parser.add_argument('--title', required=False, help='z column name')
   parser.add_argument('--y_label', required=False, help='label on y axis')
   parser.add_argument('--x_label', required=False, help='label on x axis')
+  parser.add_argument('--bins', required=False, help='number of bins')
   parser.add_argument('--verbose', action='store_true', help='more logging')
   parser.add_argument('--target', required=False, default='plot.png', help='plot filename')
   parser.add_argument('--height', required=False, type=float, default=8, help='height of plot')
@@ -89,5 +93,5 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_hist(sys.stdin, args.target, args.label, args.value, args.title, args.x_label, args.y_label, args.width, args.height, args.fontsize)
+  plot_hist(sys.stdin, args.target, args.label, args.value, args.title, args.x_label, args.y_label, args.width, args.height, args.fontsize, args.bins)
 

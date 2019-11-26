@@ -18,7 +18,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
-def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fig_width, fig_height, fontsize, bins):
+def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fig_width, fig_height, fontsize, bins, y_log):
   '''
   '''
   logging.info('starting...')
@@ -64,6 +64,9 @@ def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fi
   ax.set_title(title)
   #ax.legend(loc='upper right')
 
+  if y_log:
+    ax.set_yscale('log', nonposy='clip')
+
   # place legend at right based on https://stackoverflow.com/questions/10101700/moving-matplotlib-legend-outside-of-the-axis-makes-it-cutoff-by-the-figure-box/10154763#10154763
   handles, labels = ax.get_legend_handles_labels()
   lgd = ax.legend(handles, labels, loc='upper left', bbox_to_anchor=(1.01,1.0), borderaxespad=0)
@@ -82,6 +85,7 @@ if __name__ == '__main__':
   parser.add_argument('--y_label', required=False, help='label on y axis')
   parser.add_argument('--x_label', required=False, help='label on x axis')
   parser.add_argument('--bins', required=False, help='number of bins')
+  parser.add_argument('--y_log', action='store_true', help='log scale on y axis')
   parser.add_argument('--verbose', action='store_true', help='more logging')
   parser.add_argument('--target', required=False, default='plot.png', help='plot filename')
   parser.add_argument('--height', required=False, type=float, default=8, help='height of plot')
@@ -93,5 +97,5 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_hist(sys.stdin, args.target, args.label, args.value, args.title, args.x_label, args.y_label, args.width, args.height, args.fontsize, args.bins)
+  plot_hist(sys.stdin, args.target, args.label, args.value, args.title, args.x_label, args.y_label, args.width, args.height, args.fontsize, args.bins, args.y_log)
 

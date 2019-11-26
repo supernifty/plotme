@@ -18,5 +18,5 @@ python plotme/box.py --x x --y y --z z < test/box.tsv
 
 ### hist
 ```
-python plotme/hist.py --x x --y z < test/box.tsv
+python plotme/hist.py --label x --value z < test/box.tsv
 ```

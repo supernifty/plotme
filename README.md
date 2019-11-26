@@ -15,3 +15,8 @@ pip install -r requirements.txt
 ```
 python plotme/box.py --x x --y y --z z < test/box.tsv
 ```
+
+### hist
+```
+python plotme/hist.py --x x --y z < test/box.tsv
+```

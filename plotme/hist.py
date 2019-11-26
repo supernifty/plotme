@@ -75,10 +75,10 @@ def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fi
   matplotlib.pyplot.close('all')
 
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser(description='Plot a bar chart')
+  parser = argparse.ArgumentParser(description='Plot a histogram')
   parser.add_argument('--label', required=True, help='x column name')
   parser.add_argument('--value', required=True, help='y column name')
-  parser.add_argument('--title', required=False, help='z column name')
+  parser.add_argument('--title', required=False, help='graph title')
   parser.add_argument('--y_label', required=False, help='label on y axis')
   parser.add_argument('--x_label', required=False, help='label on x axis')
   parser.add_argument('--bins', required=False, help='number of bins')

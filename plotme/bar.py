@@ -13,7 +13,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
-def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize):
+def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, xlabel_rotation):
   '''
     xlabel: groups on x axis
     ylabel: colours
@@ -91,7 +91,7 @@ def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
     ax.set_xlabel(x_label)
   ax.set_title(title)
   ax.set_xticks(ind)
-  ax.set_xticklabels(xvals)
+  ax.set_xticklabels(xvals, rotation=xlabel_rotation)
   #ax.legend(loc='upper right')
 
   # place legend at right based on https://stackoverflow.com/questions/10101700/moving-matplotlib-legend-outside-of-the-axis-makes-it-cutoff-by-the-figure-box/10154763#10154763
@@ -122,11 +122,12 @@ if __name__ == '__main__':
   parser.add_argument('--height', required=False, type=float, default=8, help='height of plot')
   parser.add_argument('--width', required=False, type=float, default=12, help='width of plot')
   parser.add_argument('--fontsize', required=False, type=float, default=8, help='font size')
+  parser.add_argument('--x_label_rotation', required=False, default='horizontal', help='label rotation')
   args = parser.parse_args()
   if args.verbose:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.DEBUG)
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_bar(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize)
+  plot_bar(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.x_label_rotation)
 

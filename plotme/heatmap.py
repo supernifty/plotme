@@ -160,7 +160,7 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fonts
 
   logging.info('done processing %i of %i', included, total)
   plt.tight_layout()
-  plt.savefig(target, dpi=plotme.settings.DPI, transparent=True)
+  plt.savefig(target, dpi=plotme.settings.DPI, transparent=False)
   matplotlib.pyplot.close('all')
 
 if __name__ == '__main__':

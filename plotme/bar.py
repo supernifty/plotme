@@ -13,7 +13,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
-def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, xlabel_rotation):
+def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, xlabel_rotation, category, colours):
   '''
     xlabel: groups on x axis
     ylabel: colours
@@ -28,6 +28,7 @@ def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
   xvals = set()
   yvals = set()
   max_zval = 0.0
+  categories = {}
   for row in csv.DictReader(data_fh, delimiter='\t'):
     try:
       included += 1
@@ -37,7 +38,11 @@ def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
       yvals.add(yval)
       zval = float(row[zlabel])
       max_zval = max(max_zval, zval)
-      results['{},{}'.format(xval, yval)] = zval
+      xy = '{},{}'.format(xval, yval)
+      results[xy] = zval
+      logging.debug('Added %s = %f', xy, zval)
+      if category is not None:
+        categories[xy] = row[category]
     except:
       logging.debug('Failed to include %s', row)
 
@@ -71,18 +76,33 @@ def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
   ind = np.arange(len(xvals)) * fig_width / len(xvals)  # the x locations for the groups
   logging.info('ind is %s, width is %f fig_width is %f', ind, width, fig_width)
 
-  for idx in range(len(yvals)):
+  for idx in range(len(yvals)): # each yval
     offset = idx * width * 0.9 - (len(yvals) - 1) * width / 2
-    vals = [results['{},{}'.format(x, yvals[idx])] for x in xvals]
+    vals = [results['{},{}'.format(x, yvals[idx])] for x in xvals] # each xval with that yval
     logging.debug('adding values %s for %s at %s', vals, yvals[idx], ind + offset)
-    rects = ax.bar(ind + offset, vals, width * 0.85, label=yvals[idx]) 
-    for rect in rects:
+
+    if category is None:
+      rects = ax.bar(ind + offset, vals, width * 0.85, label=yvals[idx]) 
+    else:
+      rects = ax.bar(ind + offset, vals, width * 0.85) 
+    
+    for rect, val in zip(rects, xvals):
       height = rect.get_height()
       ax.annotate('{}'.format(height),
         xy=(rect.get_x() + rect.get_width() / 2, height),
         xytext=(0, 3),  # use 3 points offset
         textcoords="offset points",  # in both directions
         ha='center', va='bottom')
+
+      if category is not None:
+        label = '{} {}'.format(categories['{},{}'.format(val, yvals[idx])], yvals[idx])
+        rect.set_label(label)
+        if colours is not None:
+          for colour in colours:
+            cat, col = colour.split('=')
+            if cat == label:
+              rect.set_color(col)
+        
 
   # Add some text for labels, title and custom x-axis tick labels, etc.
   if y_label is not None:
@@ -96,7 +116,16 @@ def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
 
   # place legend at right based on https://stackoverflow.com/questions/10101700/moving-matplotlib-legend-outside-of-the-axis-makes-it-cutoff-by-the-figure-box/10154763#10154763
   handles, labels = ax.get_legend_handles_labels()
-  lgd = ax.legend(handles, labels, loc='upper left', bbox_to_anchor=(1.01,1.0), borderaxespad=0)
+  labels_seen = set()
+  labels_u = []
+  handles_u = []
+  for handle, label in sorted(zip(handles, labels), key=lambda pair: pair[1]):
+    if label in labels_seen:
+      continue
+    labels_seen.add(label)
+    labels_u.append(label)
+    handles_u.append(handle)
+  lgd = ax.legend(handles_u, labels_u, loc='upper left', bbox_to_anchor=(1.01,1.0), borderaxespad=0)
   lgd.get_frame().set_edgecolor('#000000')
 
   #fig = plt.figure(figsize=(figsize, 1 + int(figsize * len(yvals) / len(xvals))))
@@ -112,6 +141,8 @@ if __name__ == '__main__':
   parser.add_argument('--x', required=True, help='x column name')
   parser.add_argument('--y', required=True, help='y column name')
   parser.add_argument('--z', required=True, help='z column name')
+  parser.add_argument('--category', required=False, help='additional category column')
+  parser.add_argument('--colours', required=False, nargs='*', help='category colours')
   parser.add_argument('--title', required=False, help='z column name')
   parser.add_argument('--y_label', required=False, help='label on y axis')
   parser.add_argument('--x_label', required=False, help='label on x axis')
@@ -129,5 +160,5 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_bar(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.x_label_rotation)
+  plot_bar(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.x_label_rotation, args.category, args.colours)
 

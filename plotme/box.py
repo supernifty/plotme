@@ -25,6 +25,7 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
 
   import matplotlib.style
   matplotlib.style.use('seaborn')
+  rcParams.update({'lines.markeredgewidth': 0.5}) # seaborn removes fliers
 
   included = total = 0
   results = collections.defaultdict(list)
@@ -71,9 +72,10 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
   fig = plt.figure(figsize=(fig_width, fig_height))
   ax = fig.add_subplot(111)
 
-  width = fig_width / len(xvals) / len(yvals) * 0.9 # max width of each bar
+  width = fig_width / len(xvals) / len(yvals) * 0.8 # max width of each bar
   ind = width * len(yvals) / 2 + np.arange(len(xvals)) * fig_width / len(xvals)  # the x locations for the groups
   logging.debug('ind is %s, width is %f fig_width is %f', ind, width, fig_width)
+
 
   boxes = []
   positions = []
@@ -84,7 +86,7 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
     #rects = ax.bar(ind + offset, vals, width, label=yvals[idx]) 
     for c, val in enumerate(vals):
       position = [ind[c] + offset]
-      rects = ax.boxplot(val, notch=0, sym='+', vert=1, whis=1.5, positions=position, widths=width * 0.85, patch_artist=True, boxprops=dict(facecolor="C{}".format(idx)), medianprops=dict(color='#000000'))
+      rects = ax.boxplot(val, notch=0, sym='k+', vert=1, whis=1.5, positions=position, widths=width * 0.85, patch_artist=True, flierprops=dict(marker='k+', markersize=4), boxprops=dict(facecolor="C{}".format(idx)), medianprops=dict(color='#000000'))
       positions.extend(position)
       boxes.append(rects)
     #for rect in rects:

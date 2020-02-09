@@ -123,7 +123,7 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
     ax.set_xlabel(x_label)
   ax.set_title(title)
   ax.set_xticks(ind)
-  ax.set_xticklabels([x.replace('/', '\n') for x in xvals], rotation=ertical') # can use / for eol
+  ax.set_xticklabels([x.replace('/', '\n') for x in xvals], rotation='vertical') # can use / for eol
   ax.set_xlim((-1, max(ind) + 1 + width))
 
   # must do this after plotting

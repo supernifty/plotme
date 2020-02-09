@@ -16,7 +16,7 @@ from pylab import rcParams
 
 DPI=300
 
-def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, significance, significance_nobar):
+def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, significance, significance_nobar, separator, include_zero, x_label_rotation):
   '''
     xlabel: groups on x axis
     ylabel: colours
@@ -31,7 +31,8 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
   results = collections.defaultdict(list)
   xvals = set()
   yvals = set()
-  max_zval = 0.0
+  max_zval = -1e99
+  min_zval = 1e99
   for row in csv.DictReader(data_fh, delimiter='\t'):
     try:
       included += 1
@@ -41,13 +42,14 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
       yvals.add(yval)
       zval = float(row[zlabel]) # value
       max_zval = max(max_zval, zval)
+      min_zval = min(min_zval, zval)
       results['{},{}'.format(xval, yval)].append(zval)
     except:
       logging.debug('Failed to include %s', row)
 
     total += 1
 
-  logging.info('finished reading %i of %i records with max_zval %.2f', included, total, max_zval)
+  logging.info('finished reading %i of %i records with range %.2f to %.2f', included, total, min_zval, max_zval)
 
   if len(results) == 0:
     logging.warn('No data to plot')
@@ -71,11 +73,16 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
   rcParams.update({'font.size': fontsize})
   fig = plt.figure(figsize=(fig_width, fig_height))
   ax = fig.add_subplot(111)
+  ax.grid(axis='x', linewidth=0) # no lines on x-axis
 
   width = fig_width / len(xvals) / len(yvals) * 0.8 # max width of each bar
   ind = width * len(yvals) / 2 + np.arange(len(xvals)) * fig_width / len(xvals)  # the x locations for the groups
   logging.debug('ind is %s, width is %f fig_width is %f', ind, width, fig_width)
 
+  if separator:
+    for i, x in enumerate(ind[:-1]):
+      ax.axvline((x + ind[i+1]) / 2, color='white', linewidth=1)
+      logging.debug('vline at %f', x)
 
   boxes = []
   positions = []
@@ -116,8 +123,15 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
     ax.set_xlabel(x_label)
   ax.set_title(title)
   ax.set_xticks(ind)
-  ax.set_xticklabels(xvals)
+  ax.set_xticklabels([x.replace('/', '\n') for x in xvals], rotation=ertical') # can use / for eol
   ax.set_xlim((-1, max(ind) + 1 + width))
+
+  # must do this after plotting
+  if include_zero:
+    if max_zval < 0:
+      ax.set_ylim(ymax=0)
+    elif min_zval > 0:
+      ax.set_ylim(ymin=0)
 
   # place legend at right based on https://stackoverflow.com/questions/10101700/moving-matplotlib-legend-outside-of-the-axis-makes-it-cutoff-by-the-figure-box/10154763#10154763
   #handles, labels = ax.get_legend_handles_labels()
@@ -145,18 +159,21 @@ if __name__ == '__main__':
   parser.add_argument('--x_label', required=False, help='label on x axis')
   parser.add_argument('--x_order', required=False, nargs='*', help='order of x axis')
   parser.add_argument('--y_order', required=False, nargs='*', help='order of y axis')
+  parser.add_argument('--separator', action='store_true', help='vertical separator')
   parser.add_argument('--verbose', action='store_true', help='more logging')
   parser.add_argument('--target', required=False, default='plot.png', help='plot filename')
   parser.add_argument('--height', required=False, type=float, default=8, help='height of plot')
   parser.add_argument('--width', required=False, type=float, default=12, help='width of plot')
   parser.add_argument('--fontsize', required=False, type=float, default=8, help='font size')
+  parser.add_argument('--include_zero', action='store_true', help='require zero on y-axis')
   parser.add_argument('--significance', required=False, nargs='*', help='add significance of the form col1,col2,text... column numbering follows all leftmost columns from each group, then the next leftmost, finishes with all rightmost')
   parser.add_argument('--significance_nobar', action='store_true', help='do not include bars')
+  parser.add_argument('--x_label_rotation', required=False, default='vertical', help='rotation of x labels vertical or horizontal')
   args = parser.parse_args()
   if args.verbose:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.DEBUG)
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.significance, args.significance_nobar)
+  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.significance, args.significance_nobar, args.separator, args.include_zero, args.x_label_rotation)
 

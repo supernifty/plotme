@@ -16,7 +16,7 @@ from pylab import rcParams
 
 DPI=300
 
-def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, significance, significance_nobar, separator, include_zero, x_label_rotation):
+def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, significance, significance_nobar, separator, include_zero, x_label_rotation, y_log):
   '''
     xlabel: groups on x axis
     ylabel: colours
@@ -74,6 +74,9 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
   fig = plt.figure(figsize=(fig_width, fig_height))
   ax = fig.add_subplot(111)
   ax.grid(axis='x', linewidth=0) # no lines on x-axis
+
+  if y_log:
+    ax.set_yscale('log', nonposy='clip')
 
   width = fig_width / len(xvals) / len(yvals) * 0.8 # max width of each bar
   ind = width * len(yvals) / 2 + np.arange(len(xvals)) * fig_width / len(xvals)  # the x locations for the groups
@@ -169,11 +172,12 @@ if __name__ == '__main__':
   parser.add_argument('--significance', required=False, nargs='*', help='add significance of the form col1,col2,text... column numbering follows all leftmost columns from each group, then the next leftmost, finishes with all rightmost')
   parser.add_argument('--significance_nobar', action='store_true', help='do not include bars')
   parser.add_argument('--x_label_rotation', required=False, default='vertical', help='rotation of x labels vertical or horizontal')
+  parser.add_argument('--y_log', action='store_true', help='log y scale')
   args = parser.parse_args()
   if args.verbose:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.DEBUG)
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.significance, args.significance_nobar, args.separator, args.include_zero, args.x_label_rotation)
+  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.significance, args.significance_nobar, args.separator, args.include_zero, args.x_label_rotation, args.y_log)
 

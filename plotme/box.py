@@ -16,7 +16,7 @@ from pylab import rcParams
 
 DPI=300
 
-def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, significance, significance_nobar, separator, include_zero, x_label_rotation, y_log):
+def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, significance, significance_nobar, separator, include_zero=False, x_label_rotation='vertical', y_log=False, annotate=None, annotate_location=None):
   '''
     xlabel: groups on x axis
     ylabel: colours
@@ -119,6 +119,10 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
         plt.plot([x1, x1, x2, x2], [y, y+h, y+h, y], lw=0.8, c=col)
       plt.text((x1+x2)*.5, y+h, text, ha='center', va='bottom', color=col, fontdict={'size': 8})
 
+  if annotate is not None:
+    # currently ignore annotate_location
+    plt.text( width * 0.5, 0, annotate, ha='center', va='bottom', color='k', fontdict={'size': 10})
+
   # Add some text for labels, title and custom x-axis tick labels, etc.
   if y_label is not None:
     ax.set_ylabel(y_label)
@@ -158,6 +162,8 @@ if __name__ == '__main__':
   parser.add_argument('--y', required=True, help='y column name')
   parser.add_argument('--z', required=True, help='z column name')
   parser.add_argument('--title', required=False, help='z column name')
+  parser.add_argument('--annotate', required=False, help='add text to graph')
+  parser.add_argument('--annotate_location', required=False, help='text location x,y')
   parser.add_argument('--y_label', required=False, help='label on y axis')
   parser.add_argument('--x_label', required=False, help='label on x axis')
   parser.add_argument('--x_order', required=False, nargs='*', help='order of x axis')
@@ -179,5 +185,5 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.significance, args.significance_nobar, args.separator, args.include_zero, args.x_label_rotation, args.y_log)
+  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.significance, args.significance_nobar, args.separator, args.include_zero, args.x_label_rotation, args.y_log, args.annotate, args.annotate_location)
 

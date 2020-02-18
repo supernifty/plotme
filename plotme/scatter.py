@@ -30,7 +30,8 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize, fontsize, log
       yval = float(row[ylabel]) + (random.random() - 0.5) * 2 * wiggle # y axis value
       xvals.append(xval)
       yvals.append(yval)
-      zvals.append(row[zlabel])
+      if zlabel is not None:
+        zvals.append(row[zlabel])
 
     except:
       logging.warn('Failed to include (is %s numeric?) %s', zlabel, row)
@@ -60,8 +61,9 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize, fontsize, log
 
   ax.scatter(xvals, yvals)
 
-  for x, y, z in zip(xvals, yvals, zvals):
-    ax.annotate(z, (x, y))
+  if zlabel is not None:
+    for x, y, z in zip(xvals, yvals, zvals):
+      ax.annotate(z, (x, y))
 
   if title is not None:
     ax.set_title(title)
@@ -75,7 +77,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Scatter plot')
   parser.add_argument('--x', required=True, help='x column name')
   parser.add_argument('--y', required=True, help='y column name')
-  parser.add_argument('--z', required=True, help='z column name')
+  parser.add_argument('--z', required=False, help='z column name')
   parser.add_argument('--title', required=False, help='z column name')
   parser.add_argument('--x_label', required=False, help='label on x axis')
   parser.add_argument('--y_label', required=False, help='label on y axis')

@@ -96,7 +96,7 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
     #rects = ax.bar(ind + offset, vals, width, label=yvals[idx]) 
     for c, val in enumerate(vals):
       position = [ind[c] + offset]
-      rects = ax.boxplot(val, notch=0, sym='k+', vert=1, whis=1.5, positions=position, widths=width * 0.85, patch_artist=True, flierprops=dict(marker='k+', markersize=4), boxprops=dict(facecolor="C{}".format(idx)), medianprops=dict(color='#000000'))
+      rects = ax.boxplot(val, notch=0, sym='k+', vert=1, whis=1.5, positions=position, widths=width * 0.85, patch_artist=True, flierprops=dict(marker='k+', markersize=6, markerfacecolor='k', markeredgecolor='k'), boxprops=dict(facecolor="C{}".format(idx)), medianprops=dict(color='#000000'))
       positions.extend(position)
       boxes.append(rects)
     #for rect in rects:

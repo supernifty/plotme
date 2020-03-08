@@ -88,7 +88,11 @@ def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
     
     for rect, val in zip(rects, xvals):
       height = rect.get_height()
-      ax.annotate('{}'.format(height),
+      if height < 0.01:
+        annot = '{:.3e}'.format(height)
+      else:
+        annot = '{:.2f}'.format(height)
+      ax.annotate(annot,
         xy=(rect.get_x() + rect.get_width() / 2, height),
         xytext=(0, 3),  # use 3 points offset
         textcoords="offset points",  # in both directions

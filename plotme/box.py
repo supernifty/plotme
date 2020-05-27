@@ -16,7 +16,7 @@ from pylab import rcParams
 
 DPI=300
 
-def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, significance, significance_nobar, separator, include_zero=False, x_label_rotation='vertical', y_log=False, annotate=None, annotate_location=None):
+def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, significance, significance_nobar, separator, include_zero=False, x_label_rotation='vertical', y_log=False, annotate=None, annotate_location=None, include_other=None):
   '''
     xlabel: groups on x axis
     ylabel: colours
@@ -134,11 +134,19 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
   ax.set_xlim((-1, max(ind) + 1 + width))
 
   # must do this after plotting
+  to_include = []
   if include_zero:
-    if max_zval < 0:
-      ax.set_ylim(ymax=0)
-    elif min_zval > 0:
-      ax.set_ylim(ymin=0)
+    to_include.append(0)
+  if include_other is not None:
+    to_include.append(include_other)
+
+  if len(to_include) > 0:
+    if max_zval < max(to_include):
+      ax.set_ylim(ymax=max(to_include))
+
+    if min_zval > min(to_include):
+      ax.set_ylim(ymin=min(to_include))
+
 
   # place legend at right based on https://stackoverflow.com/questions/10101700/moving-matplotlib-legend-outside-of-the-axis-makes-it-cutoff-by-the-figure-box/10154763#10154763
   #handles, labels = ax.get_legend_handles_labels()
@@ -175,6 +183,7 @@ if __name__ == '__main__':
   parser.add_argument('--width', required=False, type=float, default=12, help='width of plot')
   parser.add_argument('--fontsize', required=False, type=float, default=8, help='font size')
   parser.add_argument('--include_zero', action='store_true', help='require zero on y-axis')
+  parser.add_argument('--include_other', type=float, required=False, help='require some other value on y-axis')
   parser.add_argument('--significance', required=False, nargs='*', help='add significance of the form col1,col2,text... column numbering follows all leftmost columns from each group, then the next leftmost, finishes with all rightmost')
   parser.add_argument('--significance_nobar', action='store_true', help='do not include bars')
   parser.add_argument('--x_label_rotation', required=False, default='vertical', help='rotation of x labels vertical or horizontal')
@@ -185,5 +194,5 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.significance, args.significance_nobar, args.separator, args.include_zero, args.x_label_rotation, args.y_log, args.annotate, args.annotate_location)
+  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.significance, args.significance_nobar, args.separator, args.include_zero, args.x_label_rotation, args.y_log, args.annotate, args.annotate_location, args.include_other)
 

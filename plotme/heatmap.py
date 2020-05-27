@@ -13,7 +13,7 @@ from pylab import rcParams
 
 import plotme.settings
 
-def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fontsize, log, title, cmap, text_switch, x_label, y_label, is_numeric, x_map, y_map, x_order, y_order, x_highlight, colorbar_label, transparent):
+def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fontsize, log, title, cmap, text_switch, x_label, y_label, is_numeric, x_map, y_map, x_order, y_order, x_highlight, colorbar_label, transparent, x_rotation):
   logging.info('starting...')
 
   included = total = 0
@@ -129,7 +129,7 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fonts
 
   ax.set_xticks(range(len(xvals)))
   ax.set_yticks(range(len(yvals)))
-  ax.set_xticklabels(xvals) #, linespacing=2.0)
+  ax.set_xticklabels(xvals, rotation=x_rotation) #, linespacing=2.0)
   if x_highlight is not None:
     for idx, xval in enumerate(xvals):
       if xval in x_highlight:
@@ -187,10 +187,11 @@ if __name__ == '__main__':
   parser.add_argument('--x_order', required=False, nargs='*', help='actual1 actual2...')
   parser.add_argument('--y_order', required=False, nargs='*', help='actual1 actual2...')
   parser.add_argument('--x_highlight', required=False, nargs='*', help='xval1 xval2...')
+  parser.add_argument('--x_rotation', required=False, help='vertical to change x label orientation')
   args = parser.parse_args()
   if args.verbose:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.DEBUG)
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_heat(sys.stdin, args.target, args.x, args.y, args.z, args.text, args.figsize, args.fontsize, args.log, args.title, args.cmap, args.text_switch, args.x_label, args.y_label, args.is_numeric, args.x_map, args.y_map, args.x_order, args.y_order, args.x_highlight, args.colorbar_label, args.transparent)
+  plot_heat(sys.stdin, args.target, args.x, args.y, args.z, args.text, args.figsize, args.fontsize, args.log, args.title, args.cmap, args.text_switch, args.x_label, args.y_label, args.is_numeric, args.x_map, args.y_map, args.x_order, args.y_order, args.x_highlight, args.colorbar_label, args.transparent, args.x_rotation)

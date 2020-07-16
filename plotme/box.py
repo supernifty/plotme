@@ -16,7 +16,7 @@ from pylab import rcParams
 
 DPI=300
 
-def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, significance, significance_nobar, separator, include_zero=False, x_label_rotation='vertical', y_log=False, annotate=None, annotate_location=None, include_other=None):
+def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, significance, significance_nobar, separator, include_zero=False, x_label_rotation='vertical', y_log=False, annotate=None, annotate_location=None, include_other=None, violin=False):
   '''
     xlabel: groups on x axis
     ylabel: colours
@@ -96,7 +96,14 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
     #rects = ax.bar(ind + offset, vals, width, label=yvals[idx]) 
     for c, val in enumerate(vals):
       position = [ind[c] + offset]
-      rects = ax.boxplot(val, notch=0, sym='k+', vert=1, whis=1.5, positions=position, widths=width * 0.85, patch_artist=True, flierprops=dict(marker='k+', markersize=6, markerfacecolor='k', markeredgecolor='k'), boxprops=dict(facecolor="C{}".format(idx)), medianprops=dict(color='#000000'))
+      if violin:
+        rects = ax.violinplot(val, vert=1, positions=position, widths=width * 0.85, showmedians=True)
+        rects["bodies"][0].set_facecolor("C{}".format(idx))
+        for partname in ('cbars','cmins','cmaxes','cmedians'):
+          vp = rects[partname]
+          vp.set_edgecolor("C{}".format(idx))
+      else:
+        rects = ax.boxplot(val, notch=0, sym='k+', vert=1, whis=1.5, positions=position, widths=width * 0.85, patch_artist=True, flierprops=dict(marker='k+', markersize=6, markerfacecolor='k', markeredgecolor='k'), boxprops=dict(facecolor="C{}".format(idx)), medianprops=dict(color='#000000'))
       positions.extend(position)
       boxes.append(rects)
     #for rect in rects:
@@ -151,7 +158,10 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
   # place legend at right based on https://stackoverflow.com/questions/10101700/moving-matplotlib-legend-outside-of-the-axis-makes-it-cutoff-by-the-figure-box/10154763#10154763
   #handles, labels = ax.get_legend_handles_labels()
   #handles = [boxes[0]["boxes"][0], boxes[2]["boxes"][0]]
-  handles = [boxes[c]["boxes"][0] for c in range(0, len(boxes), len(xvals))]
+  if violin:
+    handles = [boxes[c]["bodies"][0] for c in range(0, len(boxes), len(xvals))]
+  else:
+    handles = [boxes[c]["boxes"][0] for c in range(0, len(boxes), len(xvals))]
   labels = yvals
   lgd = ax.legend(handles, labels, loc='upper left', bbox_to_anchor=(1.01,1.0), borderaxespad=0)
   lgd.get_frame().set_edgecolor('#000000')
@@ -188,11 +198,12 @@ if __name__ == '__main__':
   parser.add_argument('--significance_nobar', action='store_true', help='do not include bars')
   parser.add_argument('--x_label_rotation', required=False, default='vertical', help='rotation of x labels vertical or horizontal')
   parser.add_argument('--y_log', action='store_true', help='log y scale')
+  parser.add_argument('--violin', action='store_true', help='plot as violin plot')
   args = parser.parse_args()
   if args.verbose:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.DEBUG)
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.significance, args.significance_nobar, args.separator, args.include_zero, args.x_label_rotation, args.y_log, args.annotate, args.annotate_location, args.include_other)
+  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.significance, args.significance_nobar, args.separator, args.include_zero, args.x_label_rotation, args.y_log, args.annotate, args.annotate_location, args.include_other, args.violin)
 

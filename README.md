@@ -8,6 +8,9 @@ pip install -r requirements.txt
 ```
 
 ### heatmap
+```
+python plotme/heatmap.py --x x --y y --z z < test/box.tsv
+```
 
 ### bar
 

@@ -14,7 +14,10 @@ from pylab import rcParams
 
 import plotme.settings
 
-def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize, fontsize, log, title, x_label, y_label, wiggle):
+COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+MARKERS = ('o', 'x', 'v', '^', '<', '>', '1', '2', '3', '4', '8', 's', 'p', 'P', '*', 'h', 'H', '+', 'X', 'D', 'd', '.', ',', '|', '_')
+
+def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize, fontsize, log, title, x_label, y_label, wiggle, delimiter, z_color):
   logging.info('starting...')
   matplotlib.style.use('seaborn')
 
@@ -22,8 +25,14 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize, fontsize, log
   xvals = []
   yvals = []
   zvals = []
+  cvals = []
+  mvals = []
 
-  for row in csv.DictReader(data_fh, delimiter='\t'):
+  zvals_seen = []
+  markers_seen = set()
+  colors_seen = set()
+
+  for row in csv.DictReader(data_fh, delimiter=delimiter):
     try:
       included += 1
       xval = float(row[xlabel]) + (random.random() - 0.5) * 2 * wiggle # x axis value
@@ -31,6 +40,15 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize, fontsize, log
       xvals.append(xval)
       yvals.append(yval)
       if zlabel is not None:
+        if z_color:
+          if row[zlabel] not in zvals_seen:
+            zvals_seen.append(row[zlabel])
+          ix = zvals_seen.index(row[zlabel])
+          cvals.append(COLORS[ix % len(COLORS)])
+          colors_seen.add(COLORS[ix % len(COLORS)])
+          jx = int(ix / len(COLORS))
+          mvals.append(MARKERS[jx % len(MARKERS)])
+          markers_seen.add(MARKERS[jx % len(MARKERS)])
         zvals.append(row[zlabel])
 
     except:
@@ -59,11 +77,19 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize, fontsize, log
   else:
     ax.set_xlabel(x_label)
 
-  ax.scatter(xvals, yvals)
+  if z_color:
+    for zval in zvals_seen:
+      logging.debug('zval %s...', zval)
+      vals = [list(x) for x in zip(xvals, yvals, zvals, cvals, mvals) if x[2] == zval]
+      ax.scatter([x[0] for x in vals], [x[1] for x in vals], c=[x[3] for x in vals], marker=vals[0][4], label=zval, alpha=0.8)
+      ax.legend()
+  else:
+    ax.scatter(xvals, yvals)
 
   if zlabel is not None:
-    for x, y, z in zip(xvals, yvals, zvals):
-      ax.annotate(z, (x, y))
+    if not z_color:
+      for x, y, z in zip(xvals, yvals, zvals):
+        ax.annotate(z, (x, y))
 
   if title is not None:
     ax.set_title(title)
@@ -78,12 +104,14 @@ if __name__ == '__main__':
   parser.add_argument('--x', required=True, help='x column name')
   parser.add_argument('--y', required=True, help='y column name')
   parser.add_argument('--z', required=False, help='z column name')
+  parser.add_argument('--z_color', action='store_true', help='use colours for z')
   parser.add_argument('--title', required=False, help='z column name')
   parser.add_argument('--x_label', required=False, help='label on x axis')
   parser.add_argument('--y_label', required=False, help='label on y axis')
   parser.add_argument('--figsize', required=False, default=12, type=float, help='figsize width')
   parser.add_argument('--fontsize', required=False, default=18, type=int, help='fontsize')
   parser.add_argument('--wiggle', required=False, default=0, type=float, help='randomly perturb data')
+  parser.add_argument('--delimiter', required=False, default='\t', help='input file delimiter')
   parser.add_argument('--log', action='store_true', help='log z')
   parser.add_argument('--verbose', action='store_true', help='more logging')
   parser.add_argument('--target', required=False, default='plot.png', help='plot filename')
@@ -93,4 +121,4 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.log, args.title, args.x_label, args.y_label, args.wiggle)
+  plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color)

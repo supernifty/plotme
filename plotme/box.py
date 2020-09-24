@@ -15,8 +15,9 @@ import matplotlib.pyplot as plt
 from pylab import rcParams
 
 DPI=300
+COLORS=['#003f5c', '#ffa600', '#a05195', '#665191', '#2f4b7c', '#ff7c43', '#f95d6a', '#d45087']
 
-def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, significance, significance_nobar, separator, include_zero=False, x_label_rotation='vertical', y_log=False, annotate=None, annotate_location=None, include_other=None, violin=False):
+def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, significance, significance_nobar, separator, include_zero=False, x_label_rotation='vertical', y_log=False, annotate=None, annotate_location=None, include_other=None, violin=False, y_counts=False):
   '''
     xlabel: groups on x axis
     ylabel: colours
@@ -30,7 +31,7 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
   included = total = 0
   results = collections.defaultdict(list)
   xvals = set()
-  yvals = set()
+  yvals_count = collections.defaultdict(int)
   max_zval = -1e99
   min_zval = 1e99
   for row in csv.DictReader(data_fh, delimiter='\t'):
@@ -39,7 +40,7 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
       xval = row[xlabel] # group axis name
       yval = row[ylabel] # sub-group axis name
       xvals.add(xval)
-      yvals.add(yval)
+      yvals_count[yval] += 1
       zval = float(row[zlabel]) # value
       max_zval = max(max_zval, zval)
       min_zval = min(min_zval, zval)
@@ -59,8 +60,9 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
     xvals = sorted(list(xvals)) # groups
   else:
     xvals = x_order # groups
+
   if y_order is None:
-    yvals = sorted(list(yvals)) # sub-groups
+    yvals = sorted(list(yvals_count)) # sub-groups
   else:
     yvals = y_order
 
@@ -93,17 +95,24 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
     offset = idx * width * 0.9 - (len(yvals) - 1) * width / 2 # offset of each bar compared to ind (x centre for each group)
     vals = [results['{},{}'.format(x, yvals[idx])] for x in xvals]
     logging.debug('adding values %s for %s at %s %s', vals, yvals[idx], ind, offset)
+    if len(yvals) > 6:
+      if idx < len(COLORS):
+        color = COLORS[idx]
+      else:
+        color = 'C{}'.format(idx - len(COLORS))
+    else:
+      color = 'C{}'.format(idx)
     #rects = ax.bar(ind + offset, vals, width, label=yvals[idx]) 
     for c, val in enumerate(vals):
       position = [ind[c] + offset]
       if violin:
         rects = ax.violinplot(val, vert=1, positions=position, widths=width * 0.85, showmedians=True)
-        rects["bodies"][0].set_facecolor("C{}".format(idx))
+        rects["bodies"][0].set_facecolor(color)
         for partname in ('cbars','cmins','cmaxes','cmedians'):
           vp = rects[partname]
-          vp.set_edgecolor("C{}".format(idx))
+          vp.set_edgecolor(color)
       else:
-        rects = ax.boxplot(val, notch=0, sym='k+', vert=1, whis=1.5, positions=position, widths=width * 0.85, patch_artist=True, flierprops=dict(marker='k+', markersize=6, markerfacecolor='k', markeredgecolor='k'), boxprops=dict(facecolor="C{}".format(idx)), medianprops=dict(color='#000000'))
+        rects = ax.boxplot(val, notch=0, sym='k+', vert=1, whis=1.5, positions=position, widths=width * 0.85, patch_artist=True, flierprops=dict(marker='k+', markersize=6, markerfacecolor='k', markeredgecolor='k'), boxprops=dict(facecolor=color), medianprops=dict(color='#000000'))
       positions.extend(position)
       boxes.append(rects)
     #for rect in rects:
@@ -162,7 +171,11 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
     handles = [boxes[c]["bodies"][0] for c in range(0, len(boxes), len(xvals))]
   else:
     handles = [boxes[c]["boxes"][0] for c in range(0, len(boxes), len(xvals))]
-  labels = yvals
+
+  if y_counts:
+    labels = ['{} ({})'.format(y, int(yvals_count[y] / len(xvals))) for y in yvals]
+  else:
+    labels = yvals
   lgd = ax.legend(handles, labels, loc='upper left', bbox_to_anchor=(1.01,1.0), borderaxespad=0)
   lgd.get_frame().set_edgecolor('#000000')
 
@@ -198,6 +211,7 @@ if __name__ == '__main__':
   parser.add_argument('--significance_nobar', action='store_true', help='do not include bars')
   parser.add_argument('--x_label_rotation', required=False, default='vertical', help='rotation of x labels vertical or horizontal')
   parser.add_argument('--y_log', action='store_true', help='log y scale')
+  parser.add_argument('--y_counts', action='store_true', help='include counts in legend')
   parser.add_argument('--violin', action='store_true', help='plot as violin plot')
   args = parser.parse_args()
   if args.verbose:
@@ -205,5 +219,5 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.significance, args.significance_nobar, args.separator, args.include_zero, args.x_label_rotation, args.y_log, args.annotate, args.annotate_location, args.include_other, args.violin)
+  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.significance, args.significance_nobar, args.separator, args.include_zero, args.x_label_rotation, args.y_log, args.annotate, args.annotate_location, args.include_other, args.violin, args.y_counts)
 

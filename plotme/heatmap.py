@@ -85,12 +85,12 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fonts
     return
 
   if x_order is not None and len(x_order) > 0:
-    xvals = [x.replace('_', '\n') for x in x_order]
+    xvals = [x.replace('_', '\n') for x in x_order if x in xvals]
   else:
     xvals = sorted(list(xvals))
 
   if y_order is not None and len(y_order) > 0:
-    yvals = y_order
+    yvals = [y for y in y_order if y in yvals]
   else:
     if is_numeric:
       yvals = sorted(list(yvals))[::-1] # bottom left

@@ -17,7 +17,7 @@ import plotme.settings
 COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
 MARKERS = ('o', 'x', 'v', '^', '<', '>', '1', '2', '3', '4', '8', 's', 'p', 'P', '*', 'h', 'H', '+', 'X', 'D', 'd', '.', ',', '|', '_')
 
-def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize, fontsize, log, title, x_label, y_label, wiggle, delimiter, z_color, join, y_annot):
+def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize, fontsize, log, title, x_label, y_label, wiggle, delimiter, z_color, z_color_map, label, join, y_annot):
   logging.info('starting...')
   matplotlib.style.use('seaborn')
 
@@ -27,6 +27,7 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize, fontsize, log
   zvals = []
   cvals = []
   mvals = []
+  lvals = []
 
   zvals_seen = []
   markers_seen = set()
@@ -40,16 +41,34 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize, fontsize, log
       xvals.append(xval)
       yvals.append(yval)
       if zlabel is not None:
-        if z_color:
-          if row[zlabel] not in zvals_seen:
-            zvals_seen.append(row[zlabel])
+        if row[zlabel] not in zvals_seen:
+          zvals_seen.append(row[zlabel])
+
+        z_color_map_found = False
+        if z_color_map is not None:
+          for m in z_color_map:
+            name, value = m.split(':')
+            if name == row[zlabel]:
+              color, marker = value.split('/')
+              cvals.append(color)
+              colors_seen.add(color)
+              mvals.append(marker)
+              markers_seen.add(marker)
+              z_color_map_found = True
+              break
+
+        if z_color and not z_color_map_found:
           ix = zvals_seen.index(row[zlabel])
           cvals.append(COLORS[ix % len(COLORS)])
           colors_seen.add(COLORS[ix % len(COLORS)])
           jx = int(ix / len(COLORS))
           mvals.append(MARKERS[jx % len(MARKERS)])
           markers_seen.add(MARKERS[jx % len(MARKERS)])
+
         zvals.append(row[zlabel])
+
+      if label is not None:
+        lvals.append(row[label])
 
     except:
       logging.warn('Failed to include (is %s numeric?) %s', zlabel, row)
@@ -79,7 +98,7 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize, fontsize, log
     logging.debug('x_label is %s', x_label)
     ax.set_xlabel(x_label)
 
-  if z_color:
+  if z_color or z_color_map is not None:
     for zval in zvals_seen:
       logging.debug('zval %s...', zval)
       vals = [list(x) for x in zip(xvals, yvals, zvals, cvals, mvals) if x[2] == zval]
@@ -95,7 +114,12 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize, fontsize, log
   if zlabel is not None:
     if not z_color:
       for x, y, z in zip(xvals, yvals, zvals):
-        ax.annotate(z, (x, y))
+        ax.annotate(z, (x, y), fontsize=fontsize)
+
+  # alternative labelling
+  if label is not None:
+    for x, y, z in zip(xvals, yvals, lvals):
+      ax.annotate(z, (x, y), fontsize=fontsize)
 
   if y_annot is not None:
     for ya in y_annot:
@@ -117,7 +141,9 @@ if __name__ == '__main__':
   parser.add_argument('--x', required=True, help='x column name')
   parser.add_argument('--y', required=True, help='y column name')
   parser.add_argument('--z', required=False, help='z column name')
+  parser.add_argument('--label', required=False, help='label column')
   parser.add_argument('--z_color', action='store_true', help='use colours for z')
+  parser.add_argument('--z_color_map', required=False, nargs='+', help='specify color/marker for z: label=color:marker')
   parser.add_argument('--title', required=False, help='z column name')
   parser.add_argument('--x_label', required=False, help='label on x axis')
   parser.add_argument('--y_label', required=False, help='label on y axis')
@@ -136,4 +162,4 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.join, args.y_annot)
+  plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot)

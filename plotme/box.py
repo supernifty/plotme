@@ -15,9 +15,9 @@ import matplotlib.pyplot as plt
 from pylab import rcParams
 
 DPI=300
-COLORS=['#003f5c', '#ffa600', '#a05195', '#665191', '#2f4b7c', '#ff7c43', '#f95d6a', '#d45087']
+COLORS=['#003f5c', '#2f4b7c', '#ffa600', '#a05195', '#665191', '#ff7c43', '#f95d6a', '#d45087']
 
-def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, significance, significance_nobar, separator, include_zero=False, x_label_rotation='vertical', y_log=False, annotate=None, annotate_location=None, include_other=None, violin=False, y_counts=False):
+def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, significance, significance_nobar, separator, include_zero=False, x_label_rotation='vertical', y_log=False, annotate=None, annotate_location=None, include_other=None, violin=False, y_counts=False, color_index=0, colors=COLORS, y_max=None, sig_ends=0.01, colors_special=None, no_legend=False):
   '''
     xlabel: groups on x axis
     ylabel: colours
@@ -89,6 +89,7 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
       ax.axvline((x + ind[i+1]) / 2, color='white', linewidth=1)
       logging.debug('vline at %f', x)
 
+  special_count = 0
   boxes = []
   positions = []
   for idx in range(len(yvals)):
@@ -96,14 +97,17 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
     vals = [results['{},{}'.format(x, yvals[idx])] for x in xvals]
     logging.debug('adding values %s for %s at %s %s', vals, yvals[idx], ind, offset)
     if len(yvals) > 6:
-      if idx < len(COLORS):
-        color = COLORS[idx]
+      if idx < len(colors):
+        color = colors[(idx + color_index) % len(colors)]
       else:
-        color = 'C{}'.format(idx - len(COLORS))
+        color = 'C{}'.format((idx + color_index) - len(colors))
     else:
-      color = 'C{}'.format(idx)
+      color = 'C{}'.format(idx + color_index)
     #rects = ax.bar(ind + offset, vals, width, label=yvals[idx]) 
     for c, val in enumerate(vals):
+      if colors_special is not None:
+        color = colors_special[special_count % len(colors_special)]
+        special_count += 1
       position = [ind[c] + offset]
       if violin:
         rects = ax.violinplot(val, vert=1, positions=position, widths=width * 0.85, showmedians=True)
@@ -127,8 +131,15 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
   if significance is not None:
     for sig in significance:
       col1, col2, text = sig.split(',', 2)
-      x1, x2 = positions[int(col1)], positions[int(col2)]
-      y, h, col = max_zval + 0.01, 0.01, 'k'
+      if ',' in text:
+        text, custom_y = text.split(',')
+      else:
+        custom_y = None
+      x1, x2 = positions[int(col1)] + 0.1, positions[int(col2)] - 0.1
+      squiggem = max_zval * sig_ends
+      y, h, col = max_zval + squiggem, squiggem, 'k' # TODO these should be scaled to y axis size
+      if custom_y is not None:
+        y = float(custom_y)
       if significance_nobar:
         plt.plot([x1, x1, x2, x2], [y, y+h, y+h, y], lw=0.8, c=col, alpha=0)
       else:
@@ -137,7 +148,7 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
 
   if annotate is not None:
     # currently ignore annotate_location
-    plt.text( width * 0.5, 0, annotate, ha='center', va='bottom', color='k', fontdict={'size': 10})
+    plt.text(width * 0.5, 0, annotate, ha='center', va='bottom', color='k', fontdict={'size': 10})
 
   # Add some text for labels, title and custom x-axis tick labels, etc.
   if y_label is not None:
@@ -146,7 +157,7 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
     ax.set_xlabel(x_label)
   ax.set_title(title)
   ax.set_xticks(ind)
-  ax.set_xticklabels([x.replace('/', '\n') for x in xvals], rotation='vertical') # can use / for eol
+  ax.set_xticklabels([x.replace('/', '\n') for x in xvals], rotation=x_label_rotation) # can use / for eol
   ax.set_xlim((-1, max(ind) + 1 + width))
 
   # must do this after plotting
@@ -163,6 +174,8 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
     if min_zval > min(to_include):
       ax.set_ylim(ymin=min(to_include))
 
+  if y_max is not None:
+    ax.set_ylim(ymax=y_max)
 
   # place legend at right based on https://stackoverflow.com/questions/10101700/moving-matplotlib-legend-outside-of-the-axis-makes-it-cutoff-by-the-figure-box/10154763#10154763
   #handles, labels = ax.get_legend_handles_labels()
@@ -176,8 +189,9 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
     labels = ['{} ({})'.format(y, int(yvals_count[y] / len(xvals))) for y in yvals]
   else:
     labels = yvals
-  lgd = ax.legend(handles, labels, loc='upper left', bbox_to_anchor=(1.01,1.0), borderaxespad=0)
-  lgd.get_frame().set_edgecolor('#000000')
+  if not no_legend:
+    lgd = ax.legend(handles, labels, loc='upper left', bbox_to_anchor=(1.01,1.0), borderaxespad=0)
+    lgd.get_frame().set_edgecolor('#000000')
 
   #fig = plt.figure(figsize=(figsize, 1 + int(figsize * len(yvals) / len(xvals))))
   #ax = fig.add_subplot(111)
@@ -211,13 +225,19 @@ if __name__ == '__main__':
   parser.add_argument('--significance_nobar', action='store_true', help='do not include bars')
   parser.add_argument('--x_label_rotation', required=False, default='vertical', help='rotation of x labels vertical or horizontal')
   parser.add_argument('--y_log', action='store_true', help='log y scale')
+  parser.add_argument('--y_max', required=False, type=float, help='max for y')
   parser.add_argument('--y_counts', action='store_true', help='include counts in legend')
   parser.add_argument('--violin', action='store_true', help='plot as violin plot')
+  parser.add_argument('--color_index', default=0, type=int, help='color to start with')
+  parser.add_argument('--colors', default=None, nargs='+', help='colors')
+  parser.add_argument('--colors_special', default=None, nargs='+', help='define all colors')
+  parser.add_argument('--significance_ends', type=float, help='length of sig ends')
+  parser.add_argument('--no_legend', action='store_true', help='no legend')
   args = parser.parse_args()
   if args.verbose:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.DEBUG)
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.significance, args.significance_nobar, args.separator, args.include_zero, args.x_label_rotation, args.y_log, args.annotate, args.annotate_location, args.include_other, args.violin, args.y_counts)
+  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.significance, args.significance_nobar, args.separator, args.include_zero, args.x_label_rotation, args.y_log, args.annotate, args.annotate_location, args.include_other, args.violin, args.y_counts, args.color_index, args.colors, args.y_max, args.significance_ends, args.colors_special, args.no_legend)
 

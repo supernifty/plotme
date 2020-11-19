@@ -17,7 +17,7 @@ from pylab import rcParams
 DPI=300
 COLORS=['#003f5c', '#2f4b7c', '#ffa600', '#a05195', '#665191', '#ff7c43', '#f95d6a', '#d45087']
 
-def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, significance, significance_nobar, separator, include_zero=False, x_label_rotation='vertical', y_log=False, annotate=None, annotate_location=None, include_other=None, violin=False, y_counts=False, color_index=0, colors=COLORS, y_max=None, sig_ends=0.01, colors_special=None, no_legend=False):
+def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, significance, significance_nobar, separator, include_zero=False, x_label_rotation='vertical', y_log=False, annotate=None, annotate_location=None, include_other=None, violin=False, y_counts=False, color_index=0, colors=COLORS, y_max=None, sig_ends=0.01, colors_special=None, no_legend=False, sig_fontsize=8, markersize=6, linewidth=1):
   '''
     xlabel: groups on x axis
     ylabel: colours
@@ -26,7 +26,7 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
 
   import matplotlib.style
   matplotlib.style.use('seaborn')
-  rcParams.update({'lines.markeredgewidth': 0.5}) # seaborn removes fliers
+  rcParams.update({'lines.markeredgewidth': 0.1}) # seaborn removes fliers
 
   included = total = 0
   results = collections.defaultdict(list)
@@ -74,7 +74,10 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
   #fig = plt.figure(figsize=(fig_width, fig_width * 0.7))
   rcParams.update({'font.size': fontsize})
   fig = plt.figure(figsize=(fig_width, fig_height))
+  plt.rc('legend',fontsize=fontsize)
   ax = fig.add_subplot(111)
+  ax.tick_params(axis='x', labelsize=fontsize)
+  ax.tick_params(axis='y', labelsize=fontsize)
   ax.grid(axis='x', linewidth=0) # no lines on x-axis
 
   if y_log:
@@ -94,6 +97,7 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
   positions = []
   for idx in range(len(yvals)):
     offset = idx * width * 0.9 - (len(yvals) - 1) * width / 2 # offset of each bar compared to ind (x centre for each group)
+    #offset = idx * width * 0.9 - (len(yvals) - 1) * width / 2 # offset of each bar compared to ind (x centre for each group)
     vals = [results['{},{}'.format(x, yvals[idx])] for x in xvals]
     logging.debug('adding values %s for %s at %s %s', vals, yvals[idx], ind, offset)
     if len(yvals) > 6:
@@ -116,7 +120,8 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
           vp = rects[partname]
           vp.set_edgecolor(color)
       else:
-        rects = ax.boxplot(val, notch=0, sym='k+', vert=1, whis=1.5, positions=position, widths=width * 0.85, patch_artist=True, flierprops=dict(marker='k+', markersize=6, markerfacecolor='k', markeredgecolor='k'), boxprops=dict(facecolor=color), medianprops=dict(color='#000000'))
+        #rects = ax.boxplot(val, notch=0, sym='k+', vert=1, whis=1.5, positions=position, widths=width * 0.85, patch_artist=True, flierprops=dict(marker='k+', markersize=markersize, markerfacecolor='k', markeredgecolor='k'), boxprops=dict(facecolor=color), medianprops=dict(color='#000000'))
+        rects = ax.boxplot(val, notch=0, sym='k+', vert=1, whis=1.5, positions=position, widths=width * 0.85, patch_artist=True, flierprops=dict(marker='k+', markersize=markersize, markeredgecolor='k', markeredgewidth=0.2), boxprops=dict(facecolor=color, linewidth=linewidth), capprops=dict(linewidth=linewidth), medianprops=dict(color='#000000', linewidth=linewidth), whiskerprops=dict(linewidth=linewidth))
       positions.extend(position)
       boxes.append(rects)
     #for rect in rects:
@@ -136,26 +141,28 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
       else:
         custom_y = None
       x1, x2 = positions[int(col1)] + 0.1, positions[int(col2)] - 0.1
+      if sig_ends is None:
+        sig_ends = 0.01
       squiggem = max_zval * sig_ends
       y, h, col = max_zval + squiggem, squiggem, 'k' # TODO these should be scaled to y axis size
       if custom_y is not None:
         y = float(custom_y)
       if significance_nobar:
-        plt.plot([x1, x1, x2, x2], [y, y+h, y+h, y], lw=0.8, c=col, alpha=0)
+        plt.plot([x1, x1, x2, x2], [y, y+h, y+h, y], lw=linewidth, c=col, alpha=0)
       else:
-        plt.plot([x1, x1, x2, x2], [y, y+h, y+h, y], lw=0.8, c=col)
-      plt.text((x1+x2)*.5, y+h, text, ha='center', va='bottom', color=col, fontdict={'size': 8})
+        plt.plot([x1, x1, x2, x2], [y, y+h, y+h, y], lw=linewidth, c=col)
+      plt.text((x1+x2)*.5, y+h, text.replace('/', '\n'), ha='center', va='bottom', color=col, fontdict={'size': sig_fontsize})
 
   if annotate is not None:
     # currently ignore annotate_location
-    plt.text(width * 0.5, 0, annotate, ha='center', va='bottom', color='k', fontdict={'size': 10})
+    plt.text(width * 0.5, 0, annotate, ha='center', va='bottom', color='k', fontdict={'size': fontsize})
 
   # Add some text for labels, title and custom x-axis tick labels, etc.
   if y_label is not None:
-    ax.set_ylabel(y_label)
+    ax.set_ylabel(y_label, fontsize=fontsize)
   if x_label is not None:
-    ax.set_xlabel(x_label)
-  ax.set_title(title)
+    ax.set_xlabel(x_label, fontsize=fontsize)
+  ax.set_title(title, fontsize=fontsize)
   ax.set_xticks(ind)
   ax.set_xticklabels([x.replace('/', '\n') for x in xvals], rotation=x_label_rotation) # can use / for eol
   ax.set_xlim((-1, max(ind) + 1 + width))
@@ -218,7 +225,8 @@ if __name__ == '__main__':
   parser.add_argument('--target', required=False, default='plot.png', help='plot filename')
   parser.add_argument('--height', required=False, type=float, default=8, help='height of plot')
   parser.add_argument('--width', required=False, type=float, default=12, help='width of plot')
-  parser.add_argument('--fontsize', required=False, type=float, default=8, help='font size')
+  parser.add_argument('--fontsize', required=False, type=int, default=8, help='font size')
+  parser.add_argument('--sig_fontsize', required=False, type=int, default=8, help='font size')
   parser.add_argument('--include_zero', action='store_true', help='require zero on y-axis')
   parser.add_argument('--include_other', type=float, required=False, help='require some other value on y-axis')
   parser.add_argument('--significance', required=False, nargs='*', help='add significance of the form col1,col2,text... column numbering follows all leftmost columns from each group, then the next leftmost, finishes with all rightmost')
@@ -232,6 +240,8 @@ if __name__ == '__main__':
   parser.add_argument('--colors', default=None, nargs='+', help='colors')
   parser.add_argument('--colors_special', default=None, nargs='+', help='define all colors')
   parser.add_argument('--significance_ends', type=float, help='length of sig ends')
+  parser.add_argument('--markersize', type=int, default=6, help='size of outliers')
+  parser.add_argument('--linewidth', default=1, type=float, help='line width')
   parser.add_argument('--no_legend', action='store_true', help='no legend')
   args = parser.parse_args()
   if args.verbose:
@@ -239,5 +249,5 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.significance, args.significance_nobar, args.separator, args.include_zero, args.x_label_rotation, args.y_log, args.annotate, args.annotate_location, args.include_other, args.violin, args.y_counts, args.color_index, args.colors, args.y_max, args.significance_ends, args.colors_special, args.no_legend)
+  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.significance, args.significance_nobar, args.separator, args.include_zero, args.x_label_rotation, args.y_log, args.annotate, args.annotate_location, args.include_other, args.violin, args.y_counts, args.color_index, args.colors, args.y_max, args.significance_ends, args.colors_special, args.no_legend, args.sig_fontsize, args.markersize, args.linewidth)
 

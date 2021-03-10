@@ -202,7 +202,7 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
   #fig = plt.figure(figsize=(figsize, 1 + int(figsize * len(yvals) / len(xvals))))
   #ax = fig.add_subplot(111)
 
-  logging.info('done processing %i of %i', included, total)
+  logging.info('done processing %i of %i. plot at dpi %i', included, total, dpi)
   plt.tight_layout()
   plt.savefig(target, dpi=dpi)
   matplotlib.pyplot.close('all')

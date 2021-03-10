@@ -13,7 +13,7 @@ from pylab import rcParams
 
 import plotme.settings
 
-def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fontsize, log, title, cmap, text_switch, x_label, y_label, is_numeric, x_map, y_map, x_order, y_order, x_highlight, colorbar_label, transparent, x_rotation):
+def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fontsize, log, title, cmap, text_switch, x_label, y_label, is_numeric, x_map, y_map, x_order, y_order, x_highlight, colorbar_label, transparent, x_rotation, dpi=300):
   logging.info('starting...')
 
   included = total = 0
@@ -160,7 +160,7 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fonts
 
   logging.info('done processing %i of %i', included, total)
   plt.tight_layout()
-  plt.savefig(target, dpi=plotme.settings.DPI, transparent=transparent)
+  plt.savefig(target, dpi=dpi, transparent=transparent)
   matplotlib.pyplot.close('all')
 
 if __name__ == '__main__':
@@ -176,6 +176,7 @@ if __name__ == '__main__':
   parser.add_argument('--colorbar_label', required=False, help='label on colorbar')
   parser.add_argument('--figsize', required=False, default=12, type=float, help='figsize width')
   parser.add_argument('--fontsize', required=False, default=18, type=int, help='fontsize')
+  parser.add_argument('--dpi', required=False, default=300, type=int, help='dpi')
   parser.add_argument('--text_switch', required=False, default=0.5, type=float, help='where to change text colour')
   parser.add_argument('--log', action='store_true', help='log z')
   parser.add_argument('--transparent', action='store_true', help='transparent')
@@ -194,4 +195,4 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_heat(sys.stdin, args.target, args.x, args.y, args.z, args.text, args.figsize, args.fontsize, args.log, args.title, args.cmap, args.text_switch, args.x_label, args.y_label, args.is_numeric, args.x_map, args.y_map, args.x_order, args.y_order, args.x_highlight, args.colorbar_label, args.transparent, args.x_rotation)
+  plot_heat(sys.stdin, args.target, args.x, args.y, args.z, args.text, args.figsize, args.fontsize, args.log, args.title, args.cmap, args.text_switch, args.x_label, args.y_label, args.is_numeric, args.x_map, args.y_map, args.x_order, args.y_order, args.x_highlight, args.colorbar_label, args.transparent, args.x_rotation, args.dpi)

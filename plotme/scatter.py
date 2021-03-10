@@ -17,7 +17,7 @@ import plotme.settings
 COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
 MARKERS = ('o', 'x', 'v', '^', '<', '>', '1', '2', '3', '4', '8', 's', 'p', 'P', '*', 'h', 'H', '+', 'X', 'D', 'd', '.', ',', '|', '_')
 
-def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize, fontsize, log, title, x_label, y_label, wiggle, delimiter, z_color, z_color_map, label, join, y_annot):
+def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize, fontsize, log, title, x_label, y_label, wiggle, delimiter, z_color, z_color_map, label, join, y_annot, dpi, markersize):
   logging.info('starting...')
   matplotlib.style.use('seaborn')
 
@@ -102,12 +102,12 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize, fontsize, log
     for zval in zvals_seen:
       logging.debug('zval %s...', zval)
       vals = [list(x) for x in zip(xvals, yvals, zvals, cvals, mvals) if x[2] == zval]
-      ax.scatter([x[0] for x in vals], [x[1] for x in vals], c=[x[3] for x in vals], marker=vals[0][4], label=zval, alpha=0.8)
+      ax.scatter([x[0] for x in vals], [x[1] for x in vals], c=[x[3] for x in vals], s=markersize, marker=vals[0][4], label=zval, alpha=0.8)
       ax.legend()
       if join: # TODO does this work?
         ax.join([x[0] for x in vals], [x[1] for x in vals], c=[x[3] for x in vals], marker=vals[0][4], label=zval, alpha=0.8)
   else:
-    ax.scatter(xvals, yvals)
+    ax.scatter(xvals, yvals, s=markersize)
     if join:
       ax.plot(xvals, yvals)
 
@@ -133,7 +133,7 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize, fontsize, log
 
   logging.info('done processing %i of %i. saving to %s...', included, total, target)
   plt.tight_layout()
-  plt.savefig(target, dpi=plotme.settings.DPI, transparent=False) #plotme.settings.TRANSPARENT)
+  plt.savefig(target, dpi=dpi, transparent=False) #plotme.settings.TRANSPARENT)
   matplotlib.pyplot.close('all')
 
 if __name__ == '__main__':
@@ -149,6 +149,8 @@ if __name__ == '__main__':
   parser.add_argument('--y_label', required=False, help='label on y axis')
   parser.add_argument('--figsize', required=False, default=12, type=float, help='figsize width')
   parser.add_argument('--fontsize', required=False, default=18, type=int, help='fontsize')
+  parser.add_argument('--markersize', required=False, default=20, type=int, help='fontsize')
+  parser.add_argument('--dpi', required=False, default=plotme.settings.DPI, type=int, help='dpi')
   parser.add_argument('--wiggle', required=False, default=0, type=float, help='randomly perturb data')
   parser.add_argument('--delimiter', required=False, default='\t', help='input file delimiter')
   parser.add_argument('--log', action='store_true', help='log z')
@@ -162,4 +164,4 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot)
+  plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.dpi, args.markersize)

@@ -69,7 +69,7 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fonts
       if textlabel is None:
         text['{}|{}'.format(xval, yval)] = '{:.2f}'.format(zval)
       else:
-        text['{}|{}'.format(xval, yval)] = row[textlabel]
+        text['{}|{}'.format(xval, yval)] = row[textlabel].replace('/', '\n') # slashes for multiple lines
         
     except:
       logging.warn('Failed to include (is %s numeric?) %s', zlabel, row)
@@ -124,7 +124,7 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fonts
 
   cbar = ax.figure.colorbar(im, ax=ax, fraction=0.04, pad=0.01, shrink=0.5)
   if colorbar_label is None:
-    colorbar_labe = zlabel
+    colorbar_label = zlabel
   cbar.ax.set_ylabel(colorbar_label, rotation=-90, va="bottom")
 
   ax.set_xticks(range(len(xvals)))

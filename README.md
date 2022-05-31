@@ -4,7 +4,7 @@ Easy plotting of common graphs with TSV inputs
 
 ## Installation
 ```
-pip install -r requirements.txt
+pip install git+https://github.com/supernifty/plotme
 ```
 
 ### heatmap

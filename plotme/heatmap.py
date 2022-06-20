@@ -6,6 +6,8 @@ import logging
 import math
 import sys
 
+import numpy as np
+
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -13,7 +15,7 @@ from pylab import rcParams
 
 import plotme.settings
 
-def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fontsize, log, title, cmap, text_switch, x_label, y_label, is_numeric, x_map, y_map, x_order, y_order, x_highlight, colorbar_label, transparent, x_rotation, dpi=300):
+def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, width, height, fontsize, log, title, cmap, text_switch, x_label, y_label, is_numeric, x_map, y_map, x_order, y_order, x_highlight, colorbar_label, transparent, x_rotation, dpi=300, z_categorical=False, no_annotate=False, hide_colorbar=False, aspect=None, grid=False):
   logging.info('starting...')
 
   included = total = 0
@@ -37,6 +39,7 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fonts
       provided, actual = item.split('=')
       ymap[provided] = actual
 
+  zmap = {}
   for row in csv.DictReader(data_fh, delimiter='\t'):
     try:
       included += 1
@@ -59,7 +62,11 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fonts
 
       xvals.add(xval)
       yvals.add(yval)
-      if log:
+      if z_categorical:
+        if row[zlabel] not in zmap:
+          zmap[row[zlabel]] = len(zmap)
+        zval = zmap[row[zlabel]]
+      elif log:
         zval = math.log(float(row[zlabel]) + 1.0)
       else:
         zval = float(row[zlabel])
@@ -85,7 +92,8 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fonts
     return
 
   if x_order is not None and len(x_order) > 0:
-    xvals = [x.replace('_', '\n') for x in x_order if x in xvals]
+    #xvals = [x.replace('_', '\n') for x in x_order if x in xvals]
+    xvals = [x for x in x_order if x in xvals]
   else:
     xvals = sorted(list(xvals))
 
@@ -100,9 +108,11 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fonts
   zvals = []
   tvals = []
 
-  for y in yvals:
+  logging.info('evaluating %i yvals, starting with %s...', len(yvals), yvals[:5])
+  for i, y in enumerate(yvals):
     zrow = []
     trow = []
+    logging.info('evaluating %i xvals, starting with %s...', len(yvals), xvals[:5])
     for x in xvals:
       key = '{}|{}'.format(x, y)
       if key in results:
@@ -113,19 +123,27 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fonts
         trow.append('')
     zvals.append(zrow)
     tvals.append(trow)
+    if i % 10 == 0:
+      logging.debug('added %i', i)
 
   matplotlib.rcParams.update({'font.size': fontsize})
-  fig = plt.figure(figsize=(figsize, 1 + int(figsize * len(yvals) / len(xvals))))
+  fig = plt.figure(figsize=(width, height))
   ax = fig.add_subplot(111)
-  if cmap is None:
-    im = ax.imshow(zvals)
-  else:
-    im = ax.imshow(zvals, cmap=cmap)
+  if grid:
+    ax.set_xticks(np.arange(len(zvals[0]))-0.5, minor=True)
+    ax.set_yticks(np.arange(len(zvals))-0.5, minor=True)
+    ax.grid(which='minor', axis='both', linestyle='-')
 
-  cbar = ax.figure.colorbar(im, ax=ax, fraction=0.04, pad=0.01, shrink=0.5)
-  if colorbar_label is None:
-    colorbar_label = zlabel
-  cbar.ax.set_ylabel(colorbar_label, rotation=-90, va="bottom")
+  if cmap is None:
+    im = ax.imshow(zvals, aspect=aspect)
+  else:
+    im = ax.imshow(zvals, cmap=cmap, aspect=aspect)
+
+  if not hide_colorbar:
+    cbar = ax.figure.colorbar(im, ax=ax, fraction=0.04, pad=0.01, shrink=0.5)
+    if colorbar_label is None:
+      colorbar_label = zlabel
+    cbar.ax.set_ylabel(colorbar_label, rotation=-90, va="bottom")
 
   ax.set_xticks(range(len(xvals)))
   ax.set_yticks(range(len(yvals)))
@@ -146,12 +164,16 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, figsize, fonts
   else:
     ax.set_xlabel(x_label)
 
-  for y in range(len(yvals)):
-    for x in range(len(xvals)):
-      if zvals[y][x] > max_zval * text_switch:
-        text = ax.text(x, y, tvals[y][x], ha="center", va="center", color="k")
-      else:
-        text = ax.text(x, y, tvals[y][x], ha="center", va="center", color="w")
+  if not no_annotate:
+    logging.info('annotating %i yvals', len(yvals))
+    for y in range(len(yvals)):
+      for x in range(len(xvals)):
+        if zvals[y][x] > max_zval * text_switch:
+          text = ax.text(x, y, tvals[y][x], ha="center", va="center", color="k")
+        else:
+          text = ax.text(x, y, tvals[y][x], ha="center", va="center", color="w")
+      if y % 10 == 0:
+        logging.debug('added %i', y)
 
   if title is None:
     ax.set_title('{} given {} and {}'.format(zlabel, xlabel, ylabel))
@@ -168,13 +190,16 @@ if __name__ == '__main__':
   parser.add_argument('--x', required=True, help='x column name')
   parser.add_argument('--y', required=True, help='y column name')
   parser.add_argument('--z', required=True, help='z column name')
+  parser.add_argument('--z_categorical', action='store_true', help='z is categorical')
+  parser.add_argument('--no_annotation', action='store_true', help='do not annotate cells')
   parser.add_argument('--text', required=False, help='text if different to z')
   parser.add_argument('--title', required=False, help='z column name')
   parser.add_argument('--x_label', required=False, help='label on x axis')
   parser.add_argument('--y_label', required=False, help='label on y axis')
   parser.add_argument('--cmap', required=False, help='cmap name')
   parser.add_argument('--colorbar_label', required=False, help='label on colorbar')
-  parser.add_argument('--figsize', required=False, default=12, type=float, help='figsize width')
+  parser.add_argument('--width', required=False, default=12, type=float, help='figsize width')
+  parser.add_argument('--height', required=False, default=18, type=float, help='figsize height')
   parser.add_argument('--fontsize', required=False, default=18, type=int, help='fontsize')
   parser.add_argument('--dpi', required=False, default=300, type=int, help='dpi')
   parser.add_argument('--text_switch', required=False, default=0.5, type=float, help='where to change text colour')
@@ -189,10 +214,13 @@ if __name__ == '__main__':
   parser.add_argument('--y_order', required=False, nargs='*', help='actual1 actual2...')
   parser.add_argument('--x_highlight', required=False, nargs='*', help='xval1 xval2...')
   parser.add_argument('--x_rotation', required=False, help='vertical to change x label orientation')
+  parser.add_argument('--hide_colorbar', action='store_true',  help='hide colorbar')
+  parser.add_argument('--aspect', required=False, help='imshow aspect')
+  parser.add_argument('--grid', action='store_true', help='imshow gridlines')
   args = parser.parse_args()
   if args.verbose:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.DEBUG)
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_heat(sys.stdin, args.target, args.x, args.y, args.z, args.text, args.figsize, args.fontsize, args.log, args.title, args.cmap, args.text_switch, args.x_label, args.y_label, args.is_numeric, args.x_map, args.y_map, args.x_order, args.y_order, args.x_highlight, args.colorbar_label, args.transparent, args.x_rotation, args.dpi)
+  plot_heat(sys.stdin, args.target, args.x, args.y, args.z, args.text, args.width, args.height, args.fontsize, args.log, args.title, args.cmap, args.text_switch, args.x_label, args.y_label, args.is_numeric, args.x_map, args.y_map, args.x_order, args.y_order, args.x_highlight, args.colorbar_label, args.transparent, args.x_rotation, args.dpi, args.z_categorical, args.no_annotation, args.hide_colorbar, args.aspect, args.grid)

@@ -17,7 +17,7 @@ import plotme.settings
 COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
 MARKERS = ('o', 'x', 'v', '^', '<', '>', '1', '2', '3', '4', '8', 's', 'p', 'P', '*', 'h', 'H', '+', 'X', 'D', 'd', '.', ',', '|', '_')
 
-def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize, fontsize, log, title, x_label, y_label, wiggle, delimiter, z_color, z_color_map, label, join, y_annot, dpi, markersize, z_cmap):
+def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize, fontsize, log, title, x_label, y_label, wiggle, delimiter, z_color, z_color_map, label, join, y_annot, dpi, markersize, z_cmap, text_rotation):
   logging.info('starting...')
   matplotlib.style.use('seaborn')
 
@@ -89,7 +89,7 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize, fontsize, log
     cvals = [m.to_rgba(float(x)) for x in zvals]
     logging.info(cvals)
 
-  logging.info('finished reading %i of %i records', included, total)
+  logging.info('finished reading %i of %i records, including %i xvals %i yvals %i zvals %i cvals %i mvals', included, total, len(xvals), len(yvals), len(zvals), len(cvals), len(mvals))
 
   if len(xvals) == 0:
     logging.warn('No data to plot')
@@ -112,8 +112,10 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize, fontsize, log
     ax.set_xlabel(x_label)
 
   if z_color or z_color_map is not None:
+    logging.debug('first item is %s', [list(x) for x in zip(xvals, yvals, zvals, cvals, mvals)][0])
     for zval in zvals_seen:
       vals = [list(x) for x in zip(xvals, yvals, zvals, cvals, mvals) if x[2] == zval]
+      logging.debug('vals for zval %s: %s', zval, vals)
       ax.scatter([x[0] for x in vals], [x[1] for x in vals], c=[x[3] for x in vals], s=markersize, marker=vals[0][4], label=zval, alpha=0.8)
       ax.legend()
       if join: # TODO does this work?
@@ -126,14 +128,14 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize, fontsize, log
       ax.plot(xvals, yvals)
 
   if zlabel is not None:
-    if not z_color and not z_cmap:
+    if not z_color and not z_cmap and not z_color_map:
       for x, y, z in zip(xvals, yvals, zvals):
-        ax.annotate(z, (x, y), fontsize=fontsize)
+        ax.annotate(z, (x, y), fontsize=fontsize, rotation=text_rotation)
 
   # alternative labelling
   if label is not None:
     for x, y, z in zip(xvals, yvals, lvals):
-      ax.annotate(z, (x, y), fontsize=fontsize)
+      ax.annotate(z, (x, y), fontsize=fontsize, rotation=text_rotation)
 
   if y_annot is not None:
     for ya in y_annot:
@@ -157,20 +159,21 @@ if __name__ == '__main__':
   parser.add_argument('--z', required=False, help='z column name (colour)')
   parser.add_argument('--label', required=False, help='label column')
   parser.add_argument('--z_color', action='store_true', help='use colours for z')
-  parser.add_argument('--z_color_map', required=False, nargs='+', help='specify color/marker for z: label=color:marker')
+  parser.add_argument('--z_color_map', required=False, nargs='+', help='specify color/marker for z: label:color/marker')
   parser.add_argument('--z_cmap', required=False, help='z is continuous and use a color map')
-  parser.add_argument('--title', required=False, help='z column name')
+  parser.add_argument('--title', required=False, help='plot title')
   parser.add_argument('--x_label', required=False, help='label on x axis')
   parser.add_argument('--y_label', required=False, help='label on y axis')
   parser.add_argument('--figsize', required=False, default=12, type=float, help='figsize width')
   parser.add_argument('--fontsize', required=False, default=18, type=int, help='fontsize')
-  parser.add_argument('--markersize', required=False, default=20, type=int, help='fontsize')
+  parser.add_argument('--markersize', required=False, default=20, type=int, help='markersize')
   parser.add_argument('--dpi', required=False, default=plotme.settings.DPI, type=int, help='dpi')
   parser.add_argument('--wiggle', required=False, default=0, type=float, help='randomly perturb data')
   parser.add_argument('--delimiter', required=False, default='\t', help='input file delimiter')
   parser.add_argument('--log', action='store_true', help='log z')
   parser.add_argument('--join', action='store_true', help='join points')
   parser.add_argument('--y_annot', required=False, nargs='*', help='add horizontal lines of the form label=height')
+  parser.add_argument('--text_rotation', required=False, default=0, type=int, help='rotate annotation text')
   parser.add_argument('--verbose', action='store_true', help='more logging')
   parser.add_argument('--target', required=False, default='plot.png', help='plot filename')
   args = parser.parse_args()
@@ -179,4 +182,4 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.dpi, args.markersize, args.z_cmap)
+  plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.dpi, args.markersize, args.z_cmap, args.text_rotation)

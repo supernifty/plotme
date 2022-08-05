@@ -15,13 +15,14 @@ from pylab import rcParams
 
 import plotme.settings
 
-def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, width, height, fontsize, log, title, cmap, text_switch, x_label, y_label, is_numeric, x_map, y_map, x_order, y_order, x_highlight, colorbar_label, transparent, x_rotation, dpi=300, z_categorical=False, no_annotate=False, hide_colorbar=False, aspect=None, grid=False):
+def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, width, height, fontsize, log, title, cmap, text_switch, x_label, y_label, is_numeric, x_map, y_map, x_order, y_order, x_highlight, colorbar_label, transparent, x_rotation, dpi=300, z_categorical=False, no_annotate=False, hide_colorbar=False, aspect=None, grid=False, x_order_no_sort=False):
   logging.info('starting...')
 
   included = total = 0
   results = {}
   text = {}
   xvals = set()
+  xvals_order = []
   yvals = set()
   max_zval = 0.0
 
@@ -60,6 +61,8 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, width, height,
       elif len(ymap) > 0:
         logging.debug('yval %s not in ymap %s', yval, ymap)
 
+      if xval not in xvals:
+        xvals_order.append(xval)
       xvals.add(xval)
       yvals.add(yval)
       if z_categorical:
@@ -94,6 +97,8 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, width, height,
   if x_order is not None and len(x_order) > 0:
     #xvals = [x.replace('_', '\n') for x in x_order if x in xvals]
     xvals = [x for x in x_order if x in xvals]
+  elif x_order_no_sort:
+    xvals = xvals_order
   else:
     xvals = sorted(list(xvals))
 
@@ -211,6 +216,7 @@ if __name__ == '__main__':
   parser.add_argument('--x_map', required=False, nargs='*', help='provided label=actual label')
   parser.add_argument('--y_map', required=False, nargs='*', help='provided label=actual label')
   parser.add_argument('--x_order', required=False, nargs='*', help='actual1 actual2...')
+  parser.add_argument('--x_order_no_sort', action='store_true', help='do not sort xvals')
   parser.add_argument('--y_order', required=False, nargs='*', help='actual1 actual2...')
   parser.add_argument('--x_highlight', required=False, nargs='*', help='xval1 xval2...')
   parser.add_argument('--x_rotation', required=False, help='vertical to change x label orientation')
@@ -223,4 +229,4 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_heat(sys.stdin, args.target, args.x, args.y, args.z, args.text, args.width, args.height, args.fontsize, args.log, args.title, args.cmap, args.text_switch, args.x_label, args.y_label, args.is_numeric, args.x_map, args.y_map, args.x_order, args.y_order, args.x_highlight, args.colorbar_label, args.transparent, args.x_rotation, args.dpi, args.z_categorical, args.no_annotation, args.hide_colorbar, args.aspect, args.grid)
+  plot_heat(sys.stdin, args.target, args.x, args.y, args.z, args.text, args.width, args.height, args.fontsize, args.log, args.title, args.cmap, args.text_switch, args.x_label, args.y_label, args.is_numeric, args.x_map, args.y_map, args.x_order, args.y_order, args.x_highlight, args.colorbar_label, args.transparent, args.x_rotation, args.dpi, args.z_categorical, args.no_annotation, args.hide_colorbar, args.aspect, args.grid, args.x_order_no_sort)

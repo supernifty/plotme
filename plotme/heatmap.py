@@ -15,7 +15,7 @@ from pylab import rcParams
 
 import plotme.settings
 
-def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, width, height, fontsize, log, title, cmap, text_switch, x_label, y_label, is_numeric, x_map, y_map, x_order, y_order, x_highlight, colorbar_label, transparent, x_rotation, dpi=300, z_categorical=False, no_annotate=False, hide_colorbar=False, aspect=None, grid=False, x_order_no_sort=False):
+def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, width, height, fontsize, log, title, cmap, text_switch, x_label, y_label, is_numeric, x_map, y_map, x_order, y_order, x_highlight, colorbar_label, transparent, x_rotation, dpi=300, z_categorical=False, no_annotate=False, hide_colorbar=False, aspect=None, grid=False, x_order_no_sort=False, z_format='{:.2f}'):
   logging.info('starting...')
 
   included = total = 0
@@ -77,7 +77,8 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, width, height,
       results['{}|{}'.format(xval, yval)] = zval
 
       if textlabel is None:
-        text['{}|{}'.format(xval, yval)] = '{:.2f}'.format(zval)
+        logging.debug('zval %s -> %s', zval, z_format.format(zval))
+        text['{}|{}'.format(xval, yval)] = z_format.format(zval)
       else:
         text['{}|{}'.format(xval, yval)] = row[textlabel].replace('/', '\n') # slashes for multiple lines
         
@@ -195,6 +196,7 @@ if __name__ == '__main__':
   parser.add_argument('--x', required=True, help='x column name')
   parser.add_argument('--y', required=True, help='y column name')
   parser.add_argument('--z', required=True, help='z column name')
+  parser.add_argument('--z_format', required=False, default='{:.2f}', help='z numerical formatting')
   parser.add_argument('--z_categorical', action='store_true', help='z is categorical')
   parser.add_argument('--no_annotation', action='store_true', help='do not annotate cells')
   parser.add_argument('--text', required=False, help='text if different to z')
@@ -229,4 +231,4 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_heat(sys.stdin, args.target, args.x, args.y, args.z, args.text, args.width, args.height, args.fontsize, args.log, args.title, args.cmap, args.text_switch, args.x_label, args.y_label, args.is_numeric, args.x_map, args.y_map, args.x_order, args.y_order, args.x_highlight, args.colorbar_label, args.transparent, args.x_rotation, args.dpi, args.z_categorical, args.no_annotation, args.hide_colorbar, args.aspect, args.grid, args.x_order_no_sort)
+  plot_heat(sys.stdin, args.target, args.x, args.y, args.z, args.text, args.width, args.height, args.fontsize, args.log, args.title, args.cmap, args.text_switch, args.x_label, args.y_label, args.is_numeric, args.x_map, args.y_map, args.x_order, args.y_order, args.x_highlight, args.colorbar_label, args.transparent, args.x_rotation, args.dpi, args.z_categorical, args.no_annotation, args.hide_colorbar, args.aspect, args.grid, args.x_order_no_sort, args.z_format)

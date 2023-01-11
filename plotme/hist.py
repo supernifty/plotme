@@ -18,7 +18,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
-def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fig_width, fig_height, fontsize, bins, y_log):
+def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fig_width, fig_height, fontsize, bins, y_log, stacked):
   '''
   '''
   logging.info('starting...')
@@ -51,9 +51,9 @@ def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fi
 
   for key in sorted(results.keys()):
     if bins is None:
-      ax.hist(results[key], label=key, alpha=0.4)
+      ax.hist(results[key], label=key, alpha=0.4, stacked=stacked)
     else:
-      ax.hist(results[key], label=key, alpha=0.4, bins=int(bins), stacked=False)
+      ax.hist(results[key], label=key, alpha=0.4, bins=int(bins), stacked=stacked)
   #plt.hist([ads, ads_nopass], label=('PASS', 'No PASS'), bins=int(max(ads + ads_nopass) * 100), stacked=False)
 
   # Add some text for labels, title and custom x-axis tick labels, etc.
@@ -87,6 +87,7 @@ if __name__ == '__main__':
   parser.add_argument('--bins', required=False, help='number of bins')
   parser.add_argument('--y_log', action='store_true', help='log scale on y axis')
   parser.add_argument('--verbose', action='store_true', help='more logging')
+  parser.add_argument('--stacked', action='store_true', help='stack y values')
   parser.add_argument('--target', required=False, default='plot.png', help='plot filename')
   parser.add_argument('--height', required=False, type=float, default=8, help='height of plot')
   parser.add_argument('--width', required=False, type=float, default=12, help='width of plot')
@@ -97,5 +98,5 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_hist(sys.stdin, args.target, args.label, args.value, args.title, args.x_label, args.y_label, args.width, args.height, args.fontsize, args.bins, args.y_log)
+  plot_hist(sys.stdin, args.target, args.label, args.value, args.title, args.x_label, args.y_label, args.width, args.height, args.fontsize, args.bins, args.y_log, args.stacked)
 

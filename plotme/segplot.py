@@ -75,6 +75,7 @@ def plot_seg(data_fh, target, xlabel, ylabel, lower, mean, upper, title, x_label
     ls = []
     us = []
     for xdx, xval in enumerate(sorted(xvals)):
+      logging.debug('processing %s %s...', yval, xval)
       position = xdx * len(yvals) + ydx
       xs.append(position)
       ys.append(results[xval][yval][0])
@@ -87,7 +88,7 @@ def plot_seg(data_fh, target, xlabel, ylabel, lower, mean, upper, title, x_label
     for x in range(len(xvals)-1):
       ax.axhline((x + 1) * len(yvals) - 0.5, color='white', linewidth=1)
 
-  labels = sorted(xvals)
+  labels = [xval.replace('/', '\n') for xval in sorted(xvals)]
   positions = [x * len(yvals) + ((len(yvals)-1) / 2) for x in range(len(xvals))]
 
   ax.yaxis.set_major_locator(matplotlib.ticker.FixedLocator(positions))

@@ -18,7 +18,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
-def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fig_width, fig_height, fontsize, bins, y_log, stacked):
+def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fig_width, fig_height, fontsize, bins, y_log, stacked, normalise):
   '''
   '''
   logging.info('starting...')
@@ -49,11 +49,21 @@ def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fi
   rcParams.update({'font.size': fontsize})
   ax = fig.add_subplot(111)
 
-  for key in sorted(results.keys()):
-    if bins is None:
-      ax.hist(results[key], label=key, alpha=0.4, stacked=stacked)
-    else:
-      ax.hist(results[key], label=key, alpha=0.4, bins=int(bins), stacked=stacked)
+  logging.debug('keys are %s', results.keys())
+  logging.debug('stacked is %s', stacked)
+    #plt.hist([ads, ads_nopass], label=('PASS', 'No PASS'), bins=int(max(ads + ads_nopass) * 100), stacked=False)
+  if bins is not None:
+    plt.hist([results[key] for key in sorted(results)], label=[key for key in sorted(results)], bins=bins, stacked=stacked, density=normalise)
+  else:
+    plt.hist([results[key] for key in sorted(results)], label=[key for key in sorted(results)], stacked=stacked, density=normalise)
+
+  # this does overlap
+  #else:
+  #  for key in sorted(results.keys()):
+  #    if bins is None:
+  #      ax.hist(results[key], label=key, alpha=0.4, stacked=stacked)
+  #    else:
+  #      ax.hist(results[key], label=key, alpha=0.4, bins=int(bins), stacked=stacked)
   #plt.hist([ads, ads_nopass], label=('PASS', 'No PASS'), bins=int(max(ads + ads_nopass) * 100), stacked=False)
 
   # Add some text for labels, title and custom x-axis tick labels, etc.
@@ -84,10 +94,11 @@ if __name__ == '__main__':
   parser.add_argument('--title', required=False, help='graph title')
   parser.add_argument('--y_label', required=False, help='label on y axis')
   parser.add_argument('--x_label', required=False, help='label on x axis')
-  parser.add_argument('--bins', required=False, help='number of bins')
+  parser.add_argument('--bins', required=False, type=int, help='number of bins')
   parser.add_argument('--y_log', action='store_true', help='log scale on y axis')
   parser.add_argument('--verbose', action='store_true', help='more logging')
   parser.add_argument('--stacked', action='store_true', help='stack y values')
+  parser.add_argument('--normalise', action='store_true', help='normalise y values as a density')
   parser.add_argument('--target', required=False, default='plot.png', help='plot filename')
   parser.add_argument('--height', required=False, type=float, default=8, help='height of plot')
   parser.add_argument('--width', required=False, type=float, default=12, help='width of plot')
@@ -98,5 +109,5 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_hist(sys.stdin, args.target, args.label, args.value, args.title, args.x_label, args.y_label, args.width, args.height, args.fontsize, args.bins, args.y_log, args.stacked)
+  plot_hist(sys.stdin, args.target, args.label, args.value, args.title, args.x_label, args.y_label, args.width, args.height, args.fontsize, args.bins, args.y_log, args.stacked, args.normalise)
 

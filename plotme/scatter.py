@@ -12,12 +12,15 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
+import scipy.stats
+
 import plotme.settings
 
 COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
 MARKERS = ('^', 'x', 'v', 'o', '<', '>', '1', '2', '3', '4', '8', 's', 'p', 'P', '*', 'h', 'H', '+', 'X', 'D', 'd', '.', ',', '|', '_')
+CMAP_DEFAULT= (0.6, 0.6, 0.6, 0.5)  # non-numeric => black
 
-def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=18, log=False, title=None, x_label=None, y_label=None, wiggle=0, delimiter='\t', z_color=None, z_color_map=None, label=None, join=False, y_annot=None, x_annot=None, dpi=72, markersize=20, z_cmap=None, x_squiggem=0.005, y_squiggem=0.005, marker='o'):
+def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=18, log=False, title=None, x_label=None, y_label=None, wiggle=0, delimiter='\t', z_color=None, z_color_map=None, label=None, join=False, y_annot=None, x_annot=None, dpi=72, markersize=20, z_cmap=None, x_squiggem=0.005, y_squiggem=0.005, marker='o', lines=[], line_of_best_fit=False):
   logging.info('starting...')
   matplotlib.style.use('seaborn')
 
@@ -71,7 +74,10 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
           markers_seen.add(MARKERS[jx % len(MARKERS)])
 
         if z_cmap is not None:
-          zvals_range = (min((float(row[zlabel]), zvals_range[0])), max((float(row[zlabel]), zvals_range[0])))
+          try:
+            zvals_range = (min((float(row[zlabel]), zvals_range[0])), max((float(row[zlabel]), zvals_range[0])))
+          except ValueError:
+            pass # skip non-numeric
 
         zvals.append(row[zlabel])
 
@@ -79,7 +85,7 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
         lvals.append(row[label].replace('/', '\n'))
 
     except:
-      logging.warn('Failed to include (is %s numeric?) %s', zlabel, row)
+      logging.warning('Failed to include (is %s numeric?) %s', zlabel, row)
       raise
 
     total += 1
@@ -89,13 +95,18 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
     cmap = matplotlib.cm.get_cmap(z_cmap)
     norm = matplotlib.colors.Normalize(vmin=zvals_range[0], vmax=zvals_range[1])
     m = matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap)
-    cvals = [m.to_rgba(float(x)) for x in zvals]
-    logging.info(cvals)
+    cvals = []
+    for x in zvals:
+      try:
+        cvals.append(m.to_rgba(float(x)))
+      except ValueError:
+        cvals.append(CMAP_DEFAULT)
+    logging.debug(cvals)
 
   logging.info('finished reading %i of %i records', included, total)
 
   if len(xvals) == 0:
-    logging.warn('No data to plot')
+    logging.warning('No data to plot')
     return
 
   matplotlib.rcParams.update({'font.size': fontsize})
@@ -122,11 +133,22 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
       if join: # TODO does this work?
         ax.join([x[0] for x in vals], [x[1] for x in vals], c=[x[3] for x in vals], marker=vals[0][4], label=zval, alpha=0.8)
   elif z_cmap is not None:
+    #logging.info('plotting %s %s %s %s %s', xvals, yvals, cvals, markersize, marker)
     ax.scatter(xvals, yvals, c=cvals, s=markersize, marker=marker)
+    #cbar = ax.figure.colorbar(im, ax=ax, fraction=0.04, pad=0.01, shrink=0.5)
+    ax.figure.colorbar(m, ax=ax, label=zlabel, fraction=0.04, pad=0.01, shrink=0.5)
   else:
     ax.scatter(xvals, yvals, s=markersize, marker=marker)
     if join:
       ax.plot(xvals, yvals)
+
+  if line_of_best_fit:
+    res = scipy.stats.linregress(xvals, yvals)
+    logging.debug('xvals: %s res: %s', xvals, res)
+    yvals_res = [res.intercept + res.slope * xval for xval in xvals]
+    correlation = scipy.stats.pearsonr(xvals, yvals)
+    ax.plot(xvals, yvals_res, color='orange', label='correlation {:.3f}'.format(correlation[0]), linewidth=1)
+    ax.legend()
 
   if zlabel is not None:
     if not z_color and not z_cmap:
@@ -158,6 +180,11 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
       ax.axvline(float(width), color='red', linewidth=1)
       ax.annotate(label, (float(width) + x_squiggem, min(yvals)), fontsize=8)
 
+  if lines is not None:
+    for line in lines:
+      x1, y1, x2, y2, c = line.split(',')
+      ax.plot([float(x1), float(x2)], [float(y1), float(y2)], color=c, marker='')
+
   if title is not None:
     ax.set_title(title)
 
@@ -169,6 +196,7 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
   plt.tight_layout()
   plt.savefig(target, dpi=dpi, transparent=False) #plotme.settings.TRANSPARENT)
   matplotlib.pyplot.close('all')
+  logging.info('done')
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Scatter plot')
@@ -195,6 +223,8 @@ if __name__ == '__main__':
   parser.add_argument('--join', action='store_true', help='join points')
   parser.add_argument('--y_annot', required=False, nargs='*', help='add horizontal lines of the form label=height')
   parser.add_argument('--x_annot', required=False, nargs='*', help='add vertical lines of the form label=height')
+  parser.add_argument('--lines', required=False, nargs='*', help='add unannotated lines of the form x1,y1,x2,y2,color')
+  parser.add_argument('--line_of_best_fit', action='store_true', help='include line of best fit')
   parser.add_argument('--verbose', action='store_true', help='more logging')
   parser.add_argument('--target', required=False, default='plot.png', help='plot filename')
   args = parser.parse_args()
@@ -203,4 +233,4 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker)
+  plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit)

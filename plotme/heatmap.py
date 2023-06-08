@@ -15,7 +15,7 @@ from pylab import rcParams
 
 import plotme.settings
 
-def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel, width, height, fontsize, log, title, cmap, text_switch, x_label, y_label, is_numeric, x_map, y_map, x_order, y_order, x_highlight, colorbar_label, transparent, x_rotation, dpi=300, z_categorical=False, no_annotate=False, hide_colorbar=False, aspect=None, grid=False, x_order_no_sort=False, z_format='{:.2f}'):
+def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel=None, width=12, height=18, fontsize=18, log=False, title=None, cmap=None, text_switch=0.5, x_label=None, y_label=None, is_numeric=False, x_map=None, y_map=None, x_order=None, y_order=None, x_highlight=None, colorbar_label=None, transparent=False, x_rotation=None, dpi=300, z_categorical=False, no_annotate=False, hide_colorbar=False, aspect=None, grid=False, x_order_no_sort=False, z_format='{:.2f}'):
   logging.info('starting...')
 
   included = total = 0

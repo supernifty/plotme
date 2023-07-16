@@ -1,0 +1,14 @@
+sample	event_name	event_value
+P1	sex	male
+P1	adenoma	51
+P1	colonoscopy	46
+P1	colonoscopy	51
+P1	CRC	55
+P1	case_control	case
+P1	ongoing	80
+P2	sex	female
+P2	adenoma	55
+P2	colonoscopy	56
+P2	CRC	58
+P2	death	60
+P2	case_control	control

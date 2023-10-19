@@ -32,7 +32,10 @@ def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fi
   for row in csv.DictReader(data_fh, delimiter='\t'):
     try:
       included += 1
-      results[row[label_col]].append(float(row[value_col]))
+      if label_col is None:
+        results['data'].append(float(row[value_col]))
+      else:
+        results[row[label_col]].append(float(row[value_col]))
       max_val = max(max_val, float(row[value_col]))
     except:
       logging.debug('Failed to include %s', row)
@@ -42,7 +45,7 @@ def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fi
   logging.info('finished reading %i of %i records with max_zval %.2f', included, total, max_val)
 
   if len(results) == 0:
-    logging.warn('No data to plot')
+    logging.warning('No data to plot')
     return
 
   fig = plt.figure(figsize=(fig_width, fig_height))
@@ -89,7 +92,7 @@ def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fi
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Plot a histogram')
-  parser.add_argument('--label', required=True, help='x column name')
+  parser.add_argument('--label', required=False, help='x column name')
   parser.add_argument('--value', required=True, help='y column name')
   parser.add_argument('--title', required=False, help='graph title')
   parser.add_argument('--y_label', required=False, help='label on y axis')

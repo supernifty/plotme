@@ -19,7 +19,6 @@ def main(value, group, target):
     data.append([float(r[value]), r[group]])
 
   data = pd.DataFrame(data, index=list(range(len(data))), columns=[value, 'group'])
-  print(data)
   
   sns.set_style('whitegrid')
   logging.info('plotting...')

@@ -128,10 +128,14 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
   if z_color or z_color_map is not None:
     for zval in zvals_seen:
       vals = [list(x) for x in zip(xvals, yvals, zvals, cvals, mvals) if x[2] == zval]
-      ax.scatter([x[0] for x in vals], [x[1] for x in vals], c=[x[3] for x in vals], s=markersize, marker=vals[0][4], label=zval, alpha=0.8)
+      marker = vals[0][4]
+      if join:
+        ax.plot([x[0] for x in vals], [x[1] for x in vals], c=vals[0][3], markersize=markersize, marker=marker, label=zval, alpha=0.8)
+      else:
+        ax.scatter([x[0] for x in vals], [x[1] for x in vals], c=[x[3] for x in vals], s=markersize, marker=marker, label=zval, alpha=0.8)
       ax.legend()
-      if join: # TODO does this work?
-        ax.join([x[0] for x in vals], [x[1] for x in vals], c=[x[3] for x in vals], marker=vals[0][4], label=zval, alpha=0.8)
+      #if join: # TODO does this work?
+      #  ax.join([x[0] for x in vals], [x[1] for x in vals], c=[x[3] for x in vals], marker=vals[0][4], label=zval, alpha=0.8)
   elif z_cmap is not None:
     #logging.info('plotting %s %s %s %s %s', xvals, yvals, cvals, markersize, marker)
     ax.scatter(xvals, yvals, c=cvals, s=markersize, marker=marker)

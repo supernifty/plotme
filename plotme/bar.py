@@ -13,7 +13,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
-def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, xlabel_rotation, category, colours, stacked, z_annot):
+def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, xlabel_rotation, category, colours, stacked, z_annot, x_label_add_n):
   '''
     xlabel: groups on x axis
     ylabel: colours
@@ -121,10 +121,13 @@ def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
 
       if category is not None:
         label = '{} {}'.format(categories['{},{}'.format(val, yvals[idx])], yvals[idx])
+      else:
+        label = '{}'.format(yvals[idx])
         rect.set_label(label)
         if colours is not None:
           for colour in colours:
             cat, col = colour.split('=')
+            logging.debug('looking for label %s', label)
             if cat == label:
               rect.set_color(col)
 
@@ -178,6 +181,7 @@ if __name__ == '__main__':
   parser.add_argument('--title', required=False, help='z column name')
   parser.add_argument('--y_label', required=False, help='label on y axis')
   parser.add_argument('--x_label', required=False, help='label on x axis')
+  parser.add_argument('--x_label_add_n', action='store_true', help='label on x axis')
   parser.add_argument('--x_order', required=False, nargs='*', help='order of x axis')
   parser.add_argument('--y_order', required=False, nargs='*', help='order of y axis')
   parser.add_argument('--stacked', action='store_true', help='stack categories')
@@ -193,5 +197,5 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_bar(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.x_label_rotation, args.category, args.colours, args.stacked, args.z_annot)
+  plot_bar(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.x_label_rotation, args.category, args.colours, args.stacked, args.z_annot, args.x_label_add_n)
 

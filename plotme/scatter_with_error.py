@@ -15,7 +15,7 @@ import scipy.stats
 
 COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
 
-def main(ifh, x, y, yl, yh, hue, xlabel, ylabel, log, title, show_correlation, diagonal, out):
+def main(ifh, x, y, yl, yh, hue, xlabel, ylabel, log, title, show_correlation, diagonal, out, markersize, width, height):
   logging.info('starting...')
   matplotlib.style.use('seaborn')
   xs = []
@@ -34,32 +34,35 @@ def main(ifh, x, y, yl, yh, hue, xlabel, ylabel, log, title, show_correlation, d
     else:
       hues.append('')
 
-  fig = plt.figure()
+  fig = plt.figure(figsize=(width, height))
   ax = fig.add_subplot(111)
   if hues is not None:
     seen = []
     for x, y, yl, yh, hue in zip(xs, ys, yls, yhs, hues):
       if hue not in seen:
         seen.append(hue)
-        ax.errorbar(x, y, yerr=([yl], [yh]), fmt='^', color=COLORS[seen.index(hue)], label=hue)
+        ax.errorbar(x, y, yerr=([yl], [yh]), fmt='^', color=COLORS[seen.index(hue)], label=hue, markersize=markersize, alpha=0.8)
       else:        
-        ax.errorbar(x, y, yerr=([yl], [yh]), fmt='^', color=COLORS[seen.index(hue)])
+        ax.errorbar(x, y, yerr=([yl], [yh]), fmt='^', color=COLORS[seen.index(hue)], markersize=markersize, alpha=0.8)
     ax.legend()
   else:
-    ax.errorbar(xs, ys, yerr=(yls, yhs), fmt='o')
+    ax.errorbar(xs, ys, yerr=(yls, yhs), fmt='o', markersize=markersize, alpha=0.8)
 
   if diagonal:
-    ax.plot([0, 1], [0, 1], ls="--", c=".6", transform=ax.transAxes)
+    maxes = max([max(xs), max(ys)])
+    ax.plot([0, maxes], [0, maxes], ls="--", c=".6")# , transform=ax.transAxes)
 
   if xlabel is not None:
     ax.set_xlabel(xlabel)
   if ylabel is not None:
     ax.set_ylabel(ylabel)
   if title is not None:
-    ax.set_title(title)
+    correlation = scipy.stats.pearsonr(xs, ys)
+    ax.set_title('{} (n={} correlation={:.2f})'.format(title, len(xs), correlation[0]))
   if show_correlation:
     correlation = scipy.stats.pearsonr(xs, ys)
-    ax.annotate('correlation: {:.3f}'.format(correlation[0]), (0, 0), transform=ax.transAxes)
+    logging.info('correlation is %f', correlation[0])
+    ax.annotate('n={} correlation={:.3f}'.format(len(xs), correlation[0]), (0, 0), transform=ax.transAxes)
 
 
   if log: # does this work?
@@ -83,6 +86,9 @@ if __name__ == '__main__':
   parser.add_argument('--title', required=False, help='graph title')
   parser.add_argument('--show_correlation', action='store_true', help='annotate with x and y correlation')
   parser.add_argument('--diagonal', action='store_true', help='draw a diaganal line')
+  parser.add_argument('--markersize', required=False, default=20, type=int, help='fontsize')
+  parser.add_argument('--width', required=False, default=12, type=float, help='figsize width')
+  parser.add_argument('--height', required=False, default=8, type=float, help='figsize width')
   parser.add_argument('--log', action='store_true', help='log scales')
   parser.add_argument('--verbose', action='store_true', help='more logging')
   args = parser.parse_args()
@@ -91,4 +97,4 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  main(sys.stdin, args.x, args.y, args.yl, args.yh, args.hue, args.x_label, args.y_label, args.log, args.title, args.show_correlation, args.diagonal, args.out)
+  main(sys.stdin, args.x, args.y, args.yl, args.yh, args.hue, args.x_label, args.y_label, args.log, args.title, args.show_correlation, args.diagonal, args.out, args.markersize, args.width, args.height)

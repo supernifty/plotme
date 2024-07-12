@@ -18,13 +18,14 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
-def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fig_width, fig_height, fontsize, bins, y_log, stacked, normalise):
+def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fig_width, fig_height, fontsize, bins, y_log, stacked, normalise, max_x):
   '''
   '''
   logging.info('starting...')
 
   import matplotlib.style
-  matplotlib.style.use('seaborn')
+  #matplotlib.style.use('seaborn')
+  matplotlib.style.use('seaborn-v0_8')
 
   included = total = 0
   results = collections.defaultdict(list)
@@ -32,11 +33,16 @@ def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fi
   for row in csv.DictReader(data_fh, delimiter='\t'):
     try:
       included += 1
-      if label_col is None:
-        results['data'].append(float(row[value_col]))
+      if max_x is not None:
+        to_add = min(max_x, float(row[value_col]))
       else:
-        results[row[label_col]].append(float(row[value_col]))
-      max_val = max(max_val, float(row[value_col]))
+        to_add = float(row[value_col])
+      if label_col is None:
+        results['data'].append(to_add)
+      else:
+        results[row[label_col]].append(to_add)
+        
+      max_val = max(max_val, to_add)
     except:
       logging.debug('Failed to include %s', row)
 
@@ -106,11 +112,12 @@ if __name__ == '__main__':
   parser.add_argument('--height', required=False, type=float, default=8, help='height of plot')
   parser.add_argument('--width', required=False, type=float, default=12, help='width of plot')
   parser.add_argument('--fontsize', required=False, type=float, default=8, help='font size')
+  parser.add_argument('--max', required=False, type=float, help='max x-value')
   args = parser.parse_args()
   if args.verbose:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.DEBUG)
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_hist(sys.stdin, args.target, args.label, args.value, args.title, args.x_label, args.y_label, args.width, args.height, args.fontsize, args.bins, args.y_log, args.stacked, args.normalise)
+  plot_hist(sys.stdin, args.target, args.label, args.value, args.title, args.x_label, args.y_label, args.width, args.height, args.fontsize, args.bins, args.y_log, args.stacked, args.normalise, args.max)
 

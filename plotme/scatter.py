@@ -22,7 +22,7 @@ CMAP_DEFAULT= (0.6, 0.6, 0.6, 0.5)  # non-numeric => black
 
 def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=18, log=False, title=None, x_label=None, y_label=None, wiggle=0, delimiter='\t', z_color=None, z_color_map=None, label=None, join=False, y_annot=None, x_annot=None, dpi=72, markersize=20, z_cmap=None, x_squiggem=0.005, y_squiggem=0.005, marker='o', lines=[], line_of_best_fit=False):
   logging.info('starting...')
-  matplotlib.style.use('seaborn')
+  matplotlib.style.use('seaborn-v0_8')
 
   included = total = 0
   xvals = []

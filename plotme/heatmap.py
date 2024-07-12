@@ -24,6 +24,7 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel=None, width=12,
   xvals = set()
   xvals_order = []
   yvals = set()
+  yvals_order = []
   max_zval = 0.0
 
   xmap = {}
@@ -63,6 +64,8 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel=None, width=12,
 
       if xval not in xvals:
         xvals_order.append(xval)
+      if yval not in yvals:
+        yvals_order.append(yval)
       xvals.add(xval)
       yvals.add(yval)
       if z_categorical:
@@ -107,7 +110,7 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel=None, width=12,
     yvals = [y for y in y_order if y in yvals]
   else:
     if y_order_no_sort:
-      yvals = list(yvals)
+      yvals = yvals_order
     elif is_numeric:
       yvals = sorted(list(yvals))[::-1] # bottom left
     else:

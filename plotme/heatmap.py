@@ -179,10 +179,17 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel=None, width=12,
     logging.info('annotating %i yvals', len(yvals))
     for y in range(len(yvals)):
       for x in range(len(xvals)):
+        #logging.info('%s vs %s', zvals[y][x], max_zval * text_switch)
         if zvals[y][x] > max_zval * text_switch:
-          text = ax.text(x, y, tvals[y][x], ha="center", va="center", color="k")
+          if cmap is not None and '_r' in cmap:
+            text = ax.text(x, y, tvals[y][x], ha="center", va="center", color="w")
+          else:
+            text = ax.text(x, y, tvals[y][x], ha="center", va="center", color="k")
         else:
-          text = ax.text(x, y, tvals[y][x], ha="center", va="center", color="w")
+          if cmap is not None and '_r' in cmap:
+            text = ax.text(x, y, tvals[y][x], ha="center", va="center", color="k")
+          else:
+            text = ax.text(x, y, tvals[y][x], ha="center", va="center", color="w")
       if y % 10 == 0:
         logging.debug('added %i', y)
 

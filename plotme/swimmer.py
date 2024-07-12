@@ -22,8 +22,11 @@ theme = {
   'CRC': {'color': 'red', 'markersize': 64, 'marker': '^', 'ydelta': -0.3},
   'indicator_case': {'color': '#aa4499', 'markersize': 64, 'marker': 's'},
   'indicator_control': {'color': '#88ccee', 'markersize': 64, 'marker': 's'},
-  'indicator_M': {'color': '#aa4499', 'markersize': 64, 'marker': 's'},
-  'indicator_F': {'color': '#88ccee', 'markersize': 64, 'marker': 's'}
+  'indicator_M': {'color': '#2468ce', 'markersize': 64, 'marker': 'v'},
+  'indicator_F': {'color': '#ff00ff', 'markersize': 64, 'marker': '^'},
+  'indicator_MSH2': {'color': '#00820D', 'markersize': 64, 'marker': 's'},
+  'indicator_MLH1': {'color': '#e08000', 'markersize': 64, 'marker': 'o'},
+  'indicator_MSH6': {'color': '#8888ee', 'markersize': 64, 'marker': '+'},
 }
 
 #sample  event_name      event_value
@@ -37,23 +40,28 @@ theme = {
 #P1      colonoscopy 56
 #P1      CRC     58
 #P1      death   60
-def main(data, target, width=8, height=6, dpi=72, start=None, indicator_col=None, sort_key=None):
+def main(data, target, width=8, height=6, dpi=72, start=None, indicator_col=None, bar_indicator=None, sort_key=None):
   logging.info('reading %s...', data)
   matplotlib.style.use('seaborn')
 
   ages = {} # sample end
   events = {} # event sample value
   indicator = {}
+  bar_indicators = {}
 
   if start is None:
     start = 0
 
+  # supported event_names: ongoing death args.indicator adenoma colonoscopy CRC
   for r in csv.DictReader(open(data, 'rt'), delimiter='\t'):
+    logging.debug('processing %s', r)
     # make barchart
     if r['event_name'] in ('ongoing', 'death'):
       ages[r['sample']] = float(r['event_value'])
-    if r['event_name'] == indicator_col: # sex is not yet handled
+    if r['event_name'] == indicator_col: 
       indicator[r['sample']] = r['event_value']
+    if r['event_name'] == bar_indicator: 
+      bar_indicators[r['sample']] = r['event_value']
     if r['event_name'] not in ('adenoma', 'colonoscopy', 'CRC'):
       continue
     if r['event_name'] not in events:
@@ -72,8 +80,15 @@ def main(data, target, width=8, height=6, dpi=72, start=None, indicator_col=None
   fig = plt.figure(figsize=(width, height))
   ax = fig.add_subplot(111)
 
-  ax.barh(yvals, [ages[x] - start for x in labels], height=0.1, left=start, align='center', color='grey')
+  if bar_indicator is None:
+    ax.barh(yvals, [ages[x] - start for x in labels], height=0.1, left=start, align='center', color='grey')
+  else:
+    ax.barh(yvals, [ages[x] - start for x in labels], height=0.1, left=start, align='center', color=[theme['indicator_{}'.format(bar_indicators[x])]['color'] for x in labels])
   ax.set_yticks(yvals, labels=labels)
+
+  ax.barh([0], [0], height=0.0, left=start, align='center', color=theme['indicator_MLH1']['color'], label='MLH1')
+  ax.barh([0], [0], height=0.0, left=start, align='center', color=theme['indicator_MSH2']['color'], label='MSH2')
+  
 
   # events
   for event in events:
@@ -140,6 +155,7 @@ if __name__ == '__main__':
   parser.add_argument('--dpi', required=False, default=72, type=int, help='figsize width')
   parser.add_argument('--height', required=False, default=18, type=int, help='fontsize')
   parser.add_argument('--indicator', required=True, help='indicator col name')
+  parser.add_argument('--bar_indicator', required=False, help='bar indicator col name')
   parser.add_argument('--sort_key', required=False, help='indicator sort')
   parser.add_argument('--verbose', action='store_true', help='more logging')
   args = parser.parse_args()
@@ -148,4 +164,4 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  main(args.data, args.target, width=args.width, height=args.height, dpi=args.dpi, start=args.start, indicator_col=args.indicator, sort_key=args.sort_key)
+  main(args.data, args.target, width=args.width, height=args.height, dpi=args.dpi, start=args.start, indicator_col=args.indicator, bar_indicator=args.bar_indicator, sort_key=args.sort_key)

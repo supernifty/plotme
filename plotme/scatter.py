@@ -22,7 +22,10 @@ CMAP_DEFAULT= (0.6, 0.6, 0.6, 0.5)  # non-numeric => black
 
 def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=18, log=False, title=None, x_label=None, y_label=None, wiggle=0, delimiter='\t', z_color=None, z_color_map=None, label=None, join=False, y_annot=None, x_annot=None, dpi=72, markersize=20, z_cmap=None, x_squiggem=0.005, y_squiggem=0.005, marker='o', lines=[], line_of_best_fit=False):
   logging.info('starting...')
-  matplotlib.style.use('seaborn-v0_8')
+  try:
+    matplotlib.style.use('seaborn-v0_8')
+  except:
+    matplotlib.style.use('seaborn')
 
   included = total = 0
   xvals = []
@@ -75,7 +78,7 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
 
         if z_cmap is not None:
           try:
-            zvals_range = (min((float(row[zlabel]), zvals_range[0])), max((float(row[zlabel]), zvals_range[0])))
+            zvals_range = (min((float(row[zlabel]), zvals_range[0])), max((float(row[zlabel]), zvals_range[1])))
           except ValueError:
             pass # skip non-numeric
 
@@ -92,6 +95,7 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
 
   # assign continuous color if z_cmap
   if z_cmap is not None:
+    logging.info('cmap has range %s', zvals_range)
     cmap = matplotlib.cm.get_cmap(z_cmap)
     norm = matplotlib.colors.Normalize(vmin=zvals_range[0], vmax=zvals_range[1])
     m = matplotlib.cm.ScalarMappable(norm=norm, cmap=cmap)
@@ -151,7 +155,7 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
     logging.debug('xvals: %s res: %s', xvals, res)
     yvals_res = [res.intercept + res.slope * xval for xval in xvals]
     correlation = scipy.stats.pearsonr(xvals, yvals)
-    ax.plot(xvals, yvals_res, color='orange', label='correlation {:.3f}'.format(correlation[0]), linewidth=1)
+    ax.plot(xvals, yvals_res, color='orange', label='correlation {:.3f}\npvalue {:.3f}'.format(correlation[0], correlation[1]), linewidth=1)
     ax.legend()
 
   if zlabel is not None:

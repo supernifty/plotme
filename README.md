@@ -11,13 +11,18 @@ pip install git+https://github.com/supernifty/plotme
 ### bar
 
 ### box
-Generate a box plot with main category (x) and sub-category (y) with values z
+Generate a box plot with main category (x) and optional sub-category (y) with values z
 
 ```
 python plotme/box.py --x x --y y --z z < test/box.tsv
 ```
 
 ### density.py
+Generate a density graph grouped by column group, and with values from column value.
+
+```
+python plotme/density.py --group x --value z < test/box.tsv
+```
 
 ### fit.py
 

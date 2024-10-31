@@ -42,7 +42,10 @@ theme = {
 #P1      death   60
 def main(data, target, width=8, height=6, dpi=72, start=None, indicator_col=None, bar_indicator=None, sort_key=None):
   logging.info('reading %s...', data)
-  matplotlib.style.use('seaborn')
+  try:
+    matplotlib.style.use('seaborn-v0_8')
+  except:
+    matplotlib.style.use('seaborn')
 
   ages = {} # sample end
   events = {} # event sample value

@@ -21,7 +21,10 @@ def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
   logging.info('starting...')
 
   import matplotlib.style
-  matplotlib.style.use('seaborn')
+  try:
+    matplotlib.style.use('seaborn-v0_8')
+  except:
+    matplotlib.style.use('seaborn')
 
   included = total = 0
   results = {}

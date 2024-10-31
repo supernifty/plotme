@@ -17,7 +17,10 @@ COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e3
 
 def main(ifh, x, y, yl, yh, hue, xlabel, ylabel, log, title, show_correlation, diagonal, out, markersize, width, height):
   logging.info('starting...')
-  matplotlib.style.use('seaborn')
+  try:
+    matplotlib.style.use('seaborn-v0_8')
+  except:
+    matplotlib.style.use('seaborn')
   xs = []
   ys = []
   yls = []

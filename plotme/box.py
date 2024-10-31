@@ -37,7 +37,10 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
     try:
       included += 1
       xval = row[xlabel] # group axis name
-      yval = row[ylabel] # sub-group axis name
+      if ylabel is None:
+        yval = ''
+      else:
+        yval = row[ylabel] # sub-group axis name
       xvals.add(xval)
       yvals_count[yval] += 1
       zval = float(row[zlabel]) # value
@@ -211,10 +214,10 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Plot a bar chart')
-  parser.add_argument('--x', required=True, help='x column name')
-  parser.add_argument('--y', required=True, help='y column name')
-  parser.add_argument('--z', required=True, help='z column name')
-  parser.add_argument('--title', required=False, help='z column name')
+  parser.add_argument('--x', required=True, help='category column name')
+  parser.add_argument('--y', required=False, help='subcategory column name')
+  parser.add_argument('--z', required=True, help='value column name')
+  parser.add_argument('--title', required=False, help='graph title')
   parser.add_argument('--annotate', required=False, help='add text to graph')
   parser.add_argument('--annotate_location', required=False, help='text location x,y')
   parser.add_argument('--y_label', required=False, help='label on y axis')
@@ -238,7 +241,7 @@ if __name__ == '__main__':
   parser.add_argument('--y_counts', action='store_true', help='include counts in legend')
   parser.add_argument('--violin', action='store_true', help='plot as violin plot')
   parser.add_argument('--color_index', default=0, type=int, help='color to start with')
-  parser.add_argument('--colors', default=None, nargs='+', help='colors')
+  parser.add_argument('--colors', default=COLORS, nargs='+', help='colors')
   parser.add_argument('--colors_special', default=None, nargs='+', help='define all colors')
   parser.add_argument('--significance_ends', type=float, help='length of sig ends')
   parser.add_argument('--markersize', type=int, default=6, help='size of outliers')

@@ -20,7 +20,7 @@ COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e3
 MARKERS = ('^', 'x', 'v', 'o', '<', '>', '1', '2', '3', '4', '8', 's', 'p', 'P', '*', 'h', 'H', '+', 'X', 'D', 'd', '.', ',', '|', '_')
 CMAP_DEFAULT= (0.6, 0.6, 0.6, 0.5)  # non-numeric => black
 
-def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=18, log=False, title=None, x_label=None, y_label=None, wiggle=0, delimiter='\t', z_color=None, z_color_map=None, label=None, join=False, y_annot=None, x_annot=None, dpi=72, markersize=20, z_cmap=None, x_squiggem=0.005, y_squiggem=0.005, marker='o', lines=[], line_of_best_fit=False):
+def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=18, x_log=False, y_log=False, title=None, x_label=None, y_label=None, wiggle=0, delimiter='\t', z_color=None, z_color_map=None, label=None, join=False, y_annot=None, x_annot=None, dpi=72, markersize=20, z_cmap=None, x_squiggem=0.005, y_squiggem=0.005, marker='o', lines=[], line_of_best_fit=False):
   logging.info('starting...')
   try:
     matplotlib.style.use('seaborn-v0_8')
@@ -196,8 +196,9 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
   if title is not None:
     ax.set_title(title)
 
-  if log: # does this work?
+  if y_log: # does this work?
     ax.set_yscale('log')
+  if x_log: # does this work?
     ax.set_xscale('log')
 
   logging.info('done processing %i of %i. saving to %s...', included, total, target)
@@ -227,7 +228,8 @@ if __name__ == '__main__':
   parser.add_argument('--x_squiggem', required=False, default=0.005, type=float, help='offset for text')
   parser.add_argument('--y_squiggem', required=False, default=0.005, type=float, help='offset for text')
   parser.add_argument('--delimiter', required=False, default='\t', help='input file delimiter')
-  parser.add_argument('--log', action='store_true', help='log xy')
+  parser.add_argument('--x_log', action='store_true', help='log xy')
+  parser.add_argument('--y_log', action='store_true', help='log xy')
   parser.add_argument('--join', action='store_true', help='join points')
   parser.add_argument('--y_annot', required=False, nargs='*', help='add horizontal lines of the form label=height')
   parser.add_argument('--x_annot', required=False, nargs='*', help='add vertical lines of the form label=height')
@@ -241,4 +243,4 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit)
+  plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit)

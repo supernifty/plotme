@@ -13,7 +13,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
-def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, xlabel_rotation, category, colours, stacked, z_annot, x_label_add_n, annot_color):
+def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, xlabel_rotation, category, colours, stacked, z_annot, x_label_add_n, annot_color, dpi=300):
   '''
     xlabel: groups on x axis
     ylabel: colours
@@ -171,7 +171,7 @@ def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
 
   logging.info('done processing %i of %i', included, total)
   plt.tight_layout()
-  plt.savefig(target)
+  plt.savefig(target, dpi=dpi)
   matplotlib.pyplot.close('all')
 
 if __name__ == '__main__':
@@ -195,6 +195,7 @@ if __name__ == '__main__':
   parser.add_argument('--height', required=False, type=float, default=8, help='height of plot')
   parser.add_argument('--width', required=False, type=float, default=12, help='width of plot')
   parser.add_argument('--fontsize', required=False, type=float, default=8, help='font size')
+  parser.add_argument('--dpi', default=300, type=float, help='dpi')
   parser.add_argument('--x_label_rotation', required=False, default='horizontal', help='label rotation')
   args = parser.parse_args()
   if args.verbose:
@@ -202,5 +203,5 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_bar(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.x_label_rotation, args.category, args.colours, args.stacked, args.z_annot, args.x_label_add_n, args.annot_color)
+  plot_bar(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.x_label_rotation, args.category, args.colours, args.stacked, args.z_annot, args.x_label_add_n, args.annot_color, args.dpi)
 

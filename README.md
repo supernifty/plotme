@@ -9,6 +9,11 @@ pip install git+https://github.com/supernifty/plotme
 
 
 ### bar
+Generate a bar chart with main category (x) and optional sub-category (y) with values z
+
+```
+python plotme/bar.py --x x --y y --z z < test/box.tsv
+```
 
 ### box
 Generate a box plot with main category (x) and optional sub-category (y) with values z
@@ -25,6 +30,11 @@ python plotme/density.py --group x --value z < test/box.tsv
 ```
 
 ### fit.py
+Fits a list of data points to a given distribution.
+
+```
+python plotme/fit.py --xs 1 2 3 4 8 9 10 --distribution lognormal
+```
 
 ### heatmap.py
 Plot a heatmap.
@@ -41,6 +51,11 @@ python plotme/hist.py --label x --value z < test/box.tsv
 ```
 
 ### pair_plot.py
+Generate a pair plot.
+
+```
+python plotme/pair_plot.py --x1 x --x2 y --x1_name Apples --x2_name Oranges < test/pair.tsv
+```
 
 ### pca.py
 

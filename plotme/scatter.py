@@ -12,6 +12,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
+import numpy.random
 import scipy.stats
 
 import plotme.settings
@@ -43,8 +44,8 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
   for row in csv.DictReader(data_fh, delimiter=delimiter):
     try:
       included += 1
-      xval = float(row[xlabel]) + (random.random() - 0.5) * 2 * wiggle # x axis value
-      yval = float(row[ylabel]) + (random.random() - 0.5) * 2 * wiggle # y axis value
+      xval = float(row[xlabel]) + (numpy.random.normal() - 0.5) * 2 * wiggle # x axis value
+      yval = float(row[ylabel]) + (numpy.random.normal() - 0.5) * 2 * wiggle # y axis value
       xvals.append(xval)
       yvals.append(yval)
       # process z

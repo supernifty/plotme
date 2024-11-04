@@ -57,11 +57,14 @@ Generate a pair plot.
 python plotme/pair_plot.py --x1 x --x2 y --x1_name Apples --x2_name Oranges < test/pair.tsv
 ```
 
-### pca.py
-
 ### pie.py
 
 ### scatter.py
+Generate a scatter plot.
+
+```
+python plotme/scatter.py --x 'Sepal Length' --y 'Sepal Width' --z Class --z_color --figsize 8 < test/iris.csv
+```
 
 ### scatter_with_error.py
 

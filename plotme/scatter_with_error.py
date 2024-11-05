@@ -83,7 +83,7 @@ if __name__ == '__main__':
   parser.add_argument('--yl', required=True, help='y lower bound')
   parser.add_argument('--yh', required=True, help='y upper bound')
   parser.add_argument('--hue', required=False, help='colour col')
-  parser.add_argument('--out', required=True, help='output file')
+  parser.add_argument('--out', required=False, default='plot.png', help='output file')
   parser.add_argument('--x_label', required=False, help='x axis label')
   parser.add_argument('--y_label', required=False, help='y axis label')
   parser.add_argument('--title', required=False, help='graph title')

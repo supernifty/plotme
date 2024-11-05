@@ -63,11 +63,26 @@ python plotme/pair_plot.py --x1 x --x2 y --x1_name Apples --x2_name Oranges < te
 Generate a scatter plot.
 
 ```
-python plotme/scatter.py --x 'Sepal Length' --y 'Sepal Width' --z Class --z_color --figsize 8 < test/iris.csv
+python plotme/scatter.py --x 'Sepal Length' --y 'Sepal Width' --z Class --z_color --figsize 8 < test/iris.tsv
 ```
 
 ### scatter_with_error.py
+Generate a scatter plot with error bars on y.
+
+```
+python plotme/scatter_with_error.py --x 'Sepal Length' --y 'Sepal Width' --yl 'Sepal Low' --yh 'Sepal High' < test/err.tsv
+```
 
 ### segplot.py
+Generate a segment plot (horizontal barchart with error bars).
+
+```
+python plotme/segplot.py --x c --y sc --lower l --mean m --upper u --separator --height 4 < test/seg.tsv
+```
 
 ### swimmer.py
+Generate a swimmer plot.
+
+```
+python plotme/swimmer.py --data test/swimmer.tsv --indicator Sex --start 50
+```

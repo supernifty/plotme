@@ -21,7 +21,7 @@ COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e3
 MARKERS = ('^', 'x', 'v', 'o', '<', '>', '1', '2', '3', '4', '8', 's', 'p', 'P', '*', 'h', 'H', '+', 'X', 'D', 'd', '.', ',', '|', '_')
 CMAP_DEFAULT= (0.6, 0.6, 0.6, 0.5)  # non-numeric => black
 
-def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=18, x_log=False, y_log=False, title=None, x_label=None, y_label=None, wiggle=0, delimiter='\t', z_color=None, z_color_map=None, label=None, join=False, y_annot=None, x_annot=None, dpi=72, markersize=20, z_cmap=None, x_squiggem=0.005, y_squiggem=0.005, marker='o', lines=[], line_of_best_fit=False):
+def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=18, x_log=False, y_log=False, title=None, x_label=None, y_label=None, wiggle=0, delimiter='\t', z_color=None, z_color_map=None, label=None, join=False, y_annot=None, x_annot=None, dpi=72, markersize=20, z_cmap=None, x_squiggem=0.005, y_squiggem=0.005, marker='o', lines=[], line_of_best_fit=False, line_of_best_fit_by_category=False):
   logging.info('starting...')
   try:
     matplotlib.style.use('seaborn-v0_8')
@@ -159,6 +159,15 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
     ax.plot(xvals, yvals_res, color='orange', label='correlation {:.3f}\npvalue {:.3f}'.format(correlation[0], correlation[1]), linewidth=1)
     ax.legend()
 
+  if line_of_best_fit_by_category:
+    for zval in zvals_seen:
+      vals = [list(x) for x in zip(xvals, yvals, zvals, cvals, mvals) if x[2] == zval]
+      res = scipy.stats.linregress([x[0] for x in vals], [x[1] for x in vals])
+      yvals_res = [res.intercept + res.slope * xval for xval in xvals]
+      correlation = scipy.stats.pearsonr([x[0] for x in vals], [x[1] for x in vals])
+      ax.plot(xvals, yvals_res, color=vals[0][3], label='{} correlation {:.3f}\npvalue {:.3f}'.format(zval, correlation[0], correlation[1]), linewidth=1)
+      ax.legend()
+
   if zlabel is not None:
     if not z_color and not z_cmap:
       for x, y, z in zip(xvals, yvals, zvals):
@@ -235,7 +244,8 @@ if __name__ == '__main__':
   parser.add_argument('--y_annot', required=False, nargs='*', help='add horizontal lines of the form label=height')
   parser.add_argument('--x_annot', required=False, nargs='*', help='add vertical lines of the form label=height')
   parser.add_argument('--lines', required=False, nargs='*', help='add unannotated lines of the form x1,y1,x2,y2,color')
-  parser.add_argument('--line_of_best_fit', action='store_true', help='include line of best fit')
+  parser.add_argument('--line_of_best_fit', action='store_true', help='include line of best fit for entire dataset')
+  parser.add_argument('--line_of_best_fit_by_category', action='store_true', help='include line of best fit for each z')
   parser.add_argument('--verbose', action='store_true', help='more logging')
   parser.add_argument('--target', required=False, default='plot.png', help='plot filename')
   args = parser.parse_args()
@@ -244,4 +254,4 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit)
+  plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit, args.line_of_best_fit_by_category)

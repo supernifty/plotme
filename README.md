@@ -86,3 +86,20 @@ Generate a swimmer plot.
 ```
 python plotme/swimmer.py --data test/swimmer.tsv --indicator Sex --start 50
 ```
+
+### umap_helper.py
+Add umap columns to a table
+
+```
+python plotme/umap_helper.py --cols 'Sepal Length' 'Sepal Width' 'Petal Length' 'Petal Width' --cluster < test/iris.tsv > iris.umap.tsv
+```
+
+Now you can view the clustering as a scatter plot:
+```
+python plotme/scatter.py --x 'umap0' --y 'umap1' --z cluster --z_color --figsize 8 < test/iris.umap.tsv
+```
+
+Or see the true classes:
+```
+python plotme/scatter.py --x 'umap0' --y 'umap1' --z Class --z_color --figsize 8 < test/iris.umap.tsv
+```

@@ -66,6 +66,12 @@ Generate a scatter plot.
 python plotme/scatter.py --x 'Sepal Length' --y 'Sepal Width' --z Class --z_color --figsize 8 --line_of_best_fit_by_category < test/iris.tsv
 ```
 
+Generate a (simple) 3D scatter plot:
+```
+python plotme/scatter.py --x 'Sepal Length' --y 'Sepal Width' --projection 'Petal Length' --z Class --z_color --figsize 8 < test/iris.tsv
+```
+
+
 ### scatter_with_error.py
 Generate a scatter plot with error bars on y.
 

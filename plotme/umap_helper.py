@@ -12,14 +12,17 @@ import umap
 
 import sklearn.cluster
 
-def main(ifh, ofh, cols, prefix, cluster):
+def main(ifh, ofh, cols, prefix, cluster, exclude):
   logging.info('starting...')
   raw = []
   rows = []
   idr = csv.DictReader(ifh, delimiter='\t')
   for r in idr:
     rows.append(r)
-    raw.append([float(r[x]) for x in cols])
+    if exclude:
+      raw.append([float(r[x]) for x in r if x not in cols])
+    else:
+      raw.append([float(r[x]) for x in cols])
 
   logging.info('umap calculation...')
   embedding = umap.UMAP(random_state=42).fit_transform(raw)
@@ -52,6 +55,7 @@ def main(ifh, ofh, cols, prefix, cluster):
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='generate umap embedding from provided columns')
   parser.add_argument('--cols', required=False, nargs='+', help='which columns to include')
+  parser.add_argument('--exclude', action='store_true', help='exclude specified cols')
   parser.add_argument('--prefix', required=False, default='', help='prepend to start of added column names')
   parser.add_argument('--cluster', action='store_true', help='also cluster the data')
   parser.add_argument('--verbose', action='store_true', help='more logging')
@@ -61,5 +65,5 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  main(sys.stdin, sys.stdout, args.cols, args.prefix, args.cluster)
+  main(sys.stdin, sys.stdout, args.cols, args.prefix, args.cluster, args.exclude)
 

@@ -21,7 +21,7 @@ COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e3
 MARKERS = ('^', 'x', 'v', 'o', '<', '>', '1', '2', '3', '4', '8', 's', 'p', 'P', '*', 'h', 'H', '+', 'X', 'D', 'd', '.', ',', '|', '_')
 CMAP_DEFAULT= (0.6, 0.6, 0.6, 0.5)  # non-numeric => black
 
-def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=18, x_log=False, y_log=False, title=None, x_label=None, y_label=None, wiggle=0, delimiter='\t', z_color=None, z_color_map=None, label=None, join=False, y_annot=None, x_annot=None, dpi=72, markersize=20, z_cmap=None, x_squiggem=0.005, y_squiggem=0.005, marker='o', lines=[], line_of_best_fit=False, line_of_best_fit_by_category=False):
+def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=18, x_log=False, y_log=False, title=None, x_label=None, y_label=None, wiggle=0, delimiter='\t', z_color=None, z_color_map=None, label=None, join=False, y_annot=None, x_annot=None, dpi=72, markersize=20, z_cmap=None, x_squiggem=0.005, y_squiggem=0.005, marker='o', lines=[], line_of_best_fit=False, line_of_best_fit_by_category=False, projectionlabel=None):
   logging.info('starting...')
   try:
     matplotlib.style.use('seaborn-v0_8')
@@ -32,6 +32,10 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
   xvals = []
   yvals = []
   zvals = []
+  if projectionlabel is not None:
+    projection = []
+  else:
+    projection = 0
   cvals = []
   mvals = []
   lvals = []
@@ -48,6 +52,8 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
       yval = float(row[ylabel]) + (numpy.random.normal() - 0.5) * 2 * wiggle # y axis value
       xvals.append(xval)
       yvals.append(yval)
+      if projectionlabel is not None:
+        projection.append(float(row[projectionlabel]) + (numpy.random.normal() - 0.5) * 2 * wiggle)
       # process z
       if zlabel is not None:
         if row[zlabel] not in zvals_seen and z_cmap is None:
@@ -116,7 +122,10 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
 
   matplotlib.rcParams.update({'font.size': fontsize})
   fig = plt.figure(figsize=(figsize, 1 + int(figsize * len(yvals) / len(xvals))))
-  ax = fig.add_subplot(111)
+  if projectionlabel is None:
+    ax = fig.add_subplot(111)
+  else:
+    ax = fig.add_subplot(111, projection='3d')
 
   if y_label is None:
     ax.set_ylabel(ylabel)
@@ -132,22 +141,25 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
 
   if z_color or z_color_map is not None:
     for zval in zvals_seen:
-      vals = [list(x) for x in zip(xvals, yvals, zvals, cvals, mvals) if x[2] == zval]
+      if projectionlabel is None:
+        vals = [list(x) for x in zip(xvals, yvals, zvals, cvals, mvals) if x[2] == zval]
+      else:
+        vals = [list(x) for x in zip(xvals, yvals, zvals, cvals, mvals, projection) if x[2] == zval]
       marker = vals[0][4]
       if join:
         ax.plot([x[0] for x in vals], [x[1] for x in vals], c=vals[0][3], markersize=markersize, marker=marker, label=zval, alpha=0.8)
       else:
-        ax.scatter([x[0] for x in vals], [x[1] for x in vals], c=[x[3] for x in vals], s=markersize, marker=marker, label=zval, alpha=0.8)
+        ax.scatter([x[0] for x in vals], [x[1] for x in vals], zs=[x[5] for x in vals], c=[x[3] for x in vals], s=markersize, marker=marker, label=zval, alpha=0.8)
       ax.legend()
       #if join: # TODO does this work?
       #  ax.join([x[0] for x in vals], [x[1] for x in vals], c=[x[3] for x in vals], marker=vals[0][4], label=zval, alpha=0.8)
   elif z_cmap is not None:
     #logging.info('plotting %s %s %s %s %s', xvals, yvals, cvals, markersize, marker)
-    ax.scatter(xvals, yvals, c=cvals, s=markersize, marker=marker)
+    ax.scatter(xvals, yvals, zs=projection, c=cvals, s=markersize, marker=marker)
     #cbar = ax.figure.colorbar(im, ax=ax, fraction=0.04, pad=0.01, shrink=0.5)
     ax.figure.colorbar(m, ax=ax, label=zlabel, fraction=0.04, pad=0.01, shrink=0.5)
   else:
-    ax.scatter(xvals, yvals, s=markersize, marker=marker)
+    ax.scatter(xvals, yvals, zs=projection, s=markersize, marker=marker)
     if join:
       ax.plot(xvals, yvals)
 
@@ -222,6 +234,7 @@ if __name__ == '__main__':
   parser.add_argument('--x', required=True, help='x column name')
   parser.add_argument('--y', required=True, help='y column name')
   parser.add_argument('--z', required=False, help='z column name (colour)')
+  parser.add_argument('--projection', required=False, help='additional column for 3d projection')
   parser.add_argument('--label', required=False, help='label column')
   parser.add_argument('--z_color', action='store_true', help='use colours for z')
   parser.add_argument('--z_color_map', required=False, nargs='+', help='specify color/marker for z: label:color/marker')
@@ -254,4 +267,4 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit, args.line_of_best_fit_by_category)
+  plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit, args.line_of_best_fit_by_category, args.projection)

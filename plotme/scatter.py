@@ -4,11 +4,13 @@ import argparse
 import csv
 import logging
 import math
+import os
 import random
 import sys
 
 import matplotlib
-matplotlib.use('Agg')
+# turn this off for show
+# matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
@@ -228,7 +230,10 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
 
   logging.info('done processing %i of %i. saving to %s...', included, total, target)
   plt.tight_layout()
-  plt.savefig(target, dpi=dpi, transparent=False) #plotme.settings.TRANSPARENT)
+  if target == 'show':
+    plt.show()
+  else:
+    plt.savefig(target, dpi=dpi, transparent=False) #plotme.settings.TRANSPARENT)
   matplotlib.pyplot.close('all')
   logging.info('done')
 
@@ -263,6 +268,7 @@ if __name__ == '__main__':
   parser.add_argument('--lines', required=False, nargs='*', help='add unannotated lines of the form x1,y1,x2,y2,color')
   parser.add_argument('--line_of_best_fit', action='store_true', help='include line of best fit for entire dataset')
   parser.add_argument('--line_of_best_fit_by_category', action='store_true', help='include line of best fit for each z')
+  parser.add_argument('--animate', action='store_true', help='animate 3d plot (requires ffmpeg)')
   parser.add_argument('--verbose', action='store_true', help='more logging')
   parser.add_argument('--target', required=False, default='plot.png', help='plot filename')
   args = parser.parse_args()
@@ -271,4 +277,15 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit, args.line_of_best_fit_by_category, args.projection, args.projection_view)
+  if args.animate:
+    n = 0
+    ifh = sys.stdin.readlines()
+    for x in range(1, 89, 1):
+      v = [20, x, 0]
+      logging.info('frame %i', n)
+      plot_scatter(ifh, 'anim-{:02d}.png'.format(n), args.x, args.y, args.z, args.figsize, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit, args.line_of_best_fit_by_category, args.projection, v)
+      n += 1      
+    # make animation
+    os.system('ffmpeg -r 4 -i anim-%02d.png -vcodec libx264 -acodec aac {}.mp4'.format(args.target))
+  else:
+    plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit, args.line_of_best_fit_by_category, args.projection, args.projection_view)

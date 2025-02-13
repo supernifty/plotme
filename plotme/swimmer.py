@@ -45,7 +45,7 @@ def main(data, target, width=8, height=6, dpi=72, start=None, indicator_col=None
   try:
     matplotlib.style.use('seaborn-v0_8')
   except:
-    matplotlib.style.use('seaborn')
+    matplotlib.style.use('seaborn-v0_8')
 
   ages = {} # sample end
   events = {} # event sample value

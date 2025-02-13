@@ -27,7 +27,7 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
   try:
     matplotlib.style.use('seaborn-v0_8')
   except:
-    matplotlib.style.use('seaborn')
+    matplotlib.style.use('seaborn-v0_8')
   rcParams.update({'lines.markeredgewidth': 0.1}) # seaborn removes fliers
 
   included = total = 0

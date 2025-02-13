@@ -27,7 +27,7 @@ def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fi
   try:
     matplotlib.style.use('seaborn-v0_8')
   except:
-    matplotlib.style.use('seaborn')
+    matplotlib.style.use('seaborn-v0_8')
 
   included = total = 0
   results = collections.defaultdict(list)

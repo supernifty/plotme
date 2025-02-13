@@ -20,7 +20,7 @@ def main(ifh, x, y, yl, yh, hue, xlabel, ylabel, log, title, show_correlation, d
   try:
     matplotlib.style.use('seaborn-v0_8')
   except:
-    matplotlib.style.use('seaborn')
+    matplotlib.style.use('seaborn-v0_8')
   xs = []
   ys = []
   yls = []

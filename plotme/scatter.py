@@ -28,7 +28,7 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
   try:
     matplotlib.style.use('seaborn-v0_8')
   except:
-    matplotlib.style.use('seaborn')
+    matplotlib.style.use('seaborn-v0_8')
 
   included = total = 0
   xvals = []

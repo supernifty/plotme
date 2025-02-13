@@ -29,7 +29,7 @@ def plot_seg(data_fh, target, xlabel, ylabel, lower, mean, upper, title, x_label
   try:
     matplotlib.style.use('seaborn-v0_8')
   except:
-    matplotlib.style.use('seaborn')
+    matplotlib.style.use('seaborn-v0_8')
   rcParams.update({'lines.markeredgewidth': 0.1}) # seaborn removes fliers
 
   included = total = 0

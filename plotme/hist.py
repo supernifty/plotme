@@ -18,7 +18,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
-def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fig_width, fig_height, fontsize, bins, y_log, stacked, normalise, max_x):
+def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fig_width, fig_height, fontsize, bins, y_log, stacked, normalise, max_x, stats):
   '''
   '''
   logging.info('starting...')
@@ -64,9 +64,16 @@ def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fi
   logging.debug('stacked is %s', stacked)
     #plt.hist([ads, ads_nopass], label=('PASS', 'No PASS'), bins=int(max(ads + ads_nopass) * 100), stacked=False)
   if bins is not None:
-    plt.hist([results[key] for key in sorted(results)], label=[key for key in sorted(results)], bins=bins, stacked=stacked, density=normalise)
+    hy, hx, _ = plt.hist([results[key] for key in sorted(results)], label=[key for key in sorted(results)], bins=bins, stacked=stacked, density=normalise)
   else:
-    plt.hist([results[key] for key in sorted(results)], label=[key for key in sorted(results)], stacked=stacked, density=normalise)
+    hy, hx, _ = plt.hist([results[key] for key in sorted(results)], label=[key for key in sorted(results)], stacked=stacked, density=normalise)
+
+  if stats:
+    # calculate mean of each key
+    for key in results:
+      mean = np.mean(results[key])
+      plt.axvline(x=mean, label='{} mean {:.2f}'.format(key, mean), ls=':')
+      plt.text(mean, hy.max(), '{} mean'.format(key), ha='right', va='top', rotation=90)
 
   # this does overlap
   #else:
@@ -107,6 +114,7 @@ if __name__ == '__main__':
   parser.add_argument('--x_label', required=False, help='label on x axis')
   parser.add_argument('--bins', required=False, type=int, help='number of bins')
   parser.add_argument('--y_log', action='store_true', help='log scale on y axis')
+  parser.add_argument('--stats', action='store_true', help='include means and medians')
   parser.add_argument('--verbose', action='store_true', help='more logging')
   parser.add_argument('--stacked', action='store_true', help='stack y values')
   parser.add_argument('--normalise', action='store_true', help='normalise y values as a density')
@@ -121,5 +129,5 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_hist(sys.stdin, args.target, args.label, args.value, args.title, args.x_label, args.y_label, args.width, args.height, args.fontsize, args.bins, args.y_log, args.stacked, args.normalise, args.max)
+  plot_hist(sys.stdin, args.target, args.label, args.value, args.title, args.x_label, args.y_label, args.width, args.height, args.fontsize, args.bins, args.y_log, args.stacked, args.normalise, args.max, args.stats)
 

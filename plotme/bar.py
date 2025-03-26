@@ -36,7 +36,10 @@ def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
     try:
       included += 1
       xval = row[xlabel] # group axis value
-      yval = row[ylabel] # sub-group axis value
+      if ylabel is None:
+        yval = '0' # sub-group axis value
+      else:
+        yval = row[ylabel] # sub-group axis value
       xvals.add(xval)
       yvals.add(yval)
       zval = float(row[zlabel])
@@ -180,7 +183,7 @@ def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='Plot a bar chart')
   parser.add_argument('--x', required=True, help='x column name')
-  parser.add_argument('--y', required=True, help='y column name')
+  parser.add_argument('--y', required=False, help='y column name')
   parser.add_argument('--z', required=True, help='z column name')
   parser.add_argument('--z_annot', required=False, help='format for values (default is :.2f)')
   parser.add_argument('--annot_color', required=False, default='black', help='color for annot')

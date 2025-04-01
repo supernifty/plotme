@@ -187,7 +187,7 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
     logging.debug('xvals: %s res: %s', xvals, res)
     yvals_res = [res.intercept + res.slope * xval for xval in xvals]
     correlation = scipy.stats.pearsonr(xvals, yvals)
-    ax.plot(xvals, yvals_res, color='orange', label='correlation {:.3f}\npvalue {:.3f}'.format(correlation[0], correlation[1]), linewidth=1)
+    ax.plot(xvals, yvals_res, color='orange', label='correlation {:.3f}\ngradient {:.3f}\npvalue {:.3f}'.format(correlation[0], res.slope, correlation[1]), linewidth=1)
     ax.legend()
 
   if line_of_best_fit_by_category:
@@ -196,7 +196,7 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
       res = scipy.stats.linregress([x[0] for x in vals], [x[1] for x in vals])
       yvals_res = [res.intercept + res.slope * xval for xval in xvals]
       correlation = scipy.stats.pearsonr([x[0] for x in vals], [x[1] for x in vals])
-      ax.plot(xvals, yvals_res, color=vals[0][3], label='{} correlation {:.3f}\npvalue {:.3f}'.format(zval, correlation[0], correlation[1]), linewidth=1)
+      ax.plot(xvals, yvals_res, color=vals[0][3], label='{} correlation {:.3f}\ngradient {:.3f}\npvalue {:.3f}'.format(zval, correlation[0], res.slope, correlation[1]), linewidth=1)
       ax.legend()
 
   if zlabel is not None:

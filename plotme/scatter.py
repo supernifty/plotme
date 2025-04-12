@@ -14,6 +14,8 @@ import matplotlib
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
+#import numpy.polynomial
+import numpy
 import numpy.random
 import scipy.stats
 
@@ -23,7 +25,7 @@ COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e3
 MARKERS = ('^', 'x', 'v', 'o', '<', '>', '1', '2', '3', '4', '8', 's', 'p', 'P', '*', 'h', 'H', '+', 'X', 'D', 'd', '.', ',', '|', '_')
 CMAP_DEFAULT= (0.6, 0.6, 0.6, 0.5)  # non-numeric => black
 
-def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=18, x_log=False, y_log=False, title=None, x_label=None, y_label=None, wiggle=0, delimiter='\t', z_color=None, z_color_map=None, label=None, join=False, y_annot=None, x_annot=None, dpi=72, markersize=20, z_cmap=None, x_squiggem=0.005, y_squiggem=0.005, marker='o', lines=[], line_of_best_fit=False, line_of_best_fit_by_category=False, projectionlabel=None, projectionview=None, include_zero=False, max_x=None, max_y=None, skip=True):
+def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=18, x_log=False, y_log=False, title=None, x_label=None, y_label=None, wiggle=0, delimiter='\t', z_color=None, z_color_map=None, label=None, join=False, y_annot=None, x_annot=None, dpi=72, markersize=20, z_cmap=None, x_squiggem=0.005, y_squiggem=0.005, marker='o', lines=[], line_of_best_fit=False, line_of_best_fit_by_category=False, projectionlabel=None, projectionview=None, include_zero=False, max_x=None, max_y=None, skip=True, poly=None):
   logging.info('starting...')
   try:
     matplotlib.style.use('seaborn-v0_8')
@@ -171,7 +173,10 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
       #  ax.join([x[0] for x in vals], [x[1] for x in vals], c=[x[3] for x in vals], marker=vals[0][4], label=zval, alpha=0.8)
   elif z_cmap is not None:
     #logging.info('plotting %s %s %s %s %s', xvals, yvals, cvals, markersize, marker)
-    ax.scatter(xvals, yvals, zs=projection, c=cvals, s=markersize, marker=marker)
+    if projectionlabel is None:
+      ax.scatter(xvals, yvals, c=cvals, s=markersize, marker=marker)
+    else:
+      ax.scatter(xvals, yvals, zs=projection, c=cvals, s=markersize, marker=marker)
     #cbar = ax.figure.colorbar(im, ax=ax, fraction=0.04, pad=0.01, shrink=0.5)
     ax.figure.colorbar(m, ax=ax, label=zlabel, fraction=0.04, pad=0.01, shrink=0.5)
   else:
@@ -198,6 +203,14 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
       correlation = scipy.stats.pearsonr([x[0] for x in vals], [x[1] for x in vals])
       ax.plot(xvals, yvals_res, color=vals[0][3], label='{} correlation {:.3f}\ngradient {:.3f}\npvalue {:.3f}'.format(zval, correlation[0], res.slope, correlation[1]), linewidth=1)
       ax.legend()
+
+  if poly is not None:
+    res = numpy.polyfit(xvals, yvals, poly)
+    p = numpy.poly1d(res)
+    xy = sorted(zip(xvals, yvals))
+    ax.plot([v[0] for v in xy], [p(v[0]) for v in xy], color='purple', label='polyfit degree {}'.format(poly), linewidth=1)
+    ax.legend()
+
 
   if zlabel is not None:
     if not z_color and not z_cmap:
@@ -290,6 +303,7 @@ if __name__ == '__main__':
   parser.add_argument('--lines', required=False, nargs='*', help='add unannotated lines of the form x1,y1,x2,y2,color')
   parser.add_argument('--line_of_best_fit', action='store_true', help='include line of best fit for entire dataset')
   parser.add_argument('--line_of_best_fit_by_category', action='store_true', help='include line of best fit for each z')
+  parser.add_argument('--polyfit', type=int, required=False, help='polyfit with degree n')
   parser.add_argument('--animate', action='store_true', help='animate 3d plot (requires ffmpeg)')
   parser.add_argument('--include_zero', action='store_true', help='include zero o both axes')
   parser.add_argument('--max_x', type=float, required=False, help='include this value in x')
@@ -308,9 +322,9 @@ if __name__ == '__main__':
     for x in range(1, 89, 1):
       v = [20, x, 0]
       logging.info('frame %i', n)
-      plot_scatter(ifh, 'anim-{:02d}.png'.format(n), args.x, args.y, args.z, args.figsize, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit, args.line_of_best_fit_by_category, args.projection, v)
+      plot_scatter(ifh, 'anim-{:02d}.png'.format(n), args.x, args.y, args.z, args.figsize, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit, args.line_of_best_fit_by_category, args.projection, v, poly=args.poly)
       n += 1      
     # make animation
     os.system('ffmpeg -r 4 -i anim-%02d.png -vcodec libx264 -acodec aac {}.mp4'.format(args.target))
   else:
-    plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit, args.line_of_best_fit_by_category, args.projection, args.projection_view, args.include_zero, args.max_x, args.max_y)
+    plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit, args.line_of_best_fit_by_category, args.projection, args.projection_view, args.include_zero, args.max_x, args.max_y, poly=args.polyfit)

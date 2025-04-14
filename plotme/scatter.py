@@ -187,12 +187,17 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
     if join:
       ax.plot(xvals, yvals)
 
+  if line_of_best_fit is not None or poly is not None:
+    safe_vals = [xy for xy in zip(xvals, yvals) if not math.isnan(xy[1])]
+    safe_xvals = [xy[0] for xy in safe_vals]
+    safe_yvals = [xy[1] for xy in safe_vals]
+
   if line_of_best_fit:
-    res = scipy.stats.linregress(xvals, yvals)
-    logging.debug('xvals: %s res: %s', xvals, res)
-    yvals_res = [res.intercept + res.slope * xval for xval in xvals]
-    correlation = scipy.stats.pearsonr(xvals, yvals)
-    ax.plot(xvals, yvals_res, color='orange', label='correlation {:.3f}\ngradient {:.3f}\npvalue {:.3f}'.format(correlation[0], res.slope, correlation[1]), linewidth=1)
+    res = scipy.stats.linregress(safe_xvals, safe_yvals)
+    logging.debug('xvals: %s res: %s', safe_xvals, res)
+    yvals_res = [res.intercept + res.slope * xval for xval in safe_xvals]
+    correlation = scipy.stats.pearsonr(safe_xvals, safe_yvals)
+    ax.plot(safe_xvals, yvals_res, color='orange', label='correlation {:.3f}\ngradient {:.3f}\npvalue {:.3f}'.format(correlation[0], res.slope, correlation[1]), linewidth=1)
     ax.legend()
 
   if line_of_best_fit_by_category:
@@ -205,12 +210,11 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
       ax.legend()
 
   if poly is not None:
-    res = numpy.polyfit(xvals, yvals, poly)
+    res = numpy.polyfit(safe_xvals, safe_yvals, poly)
     p = numpy.poly1d(res)
-    xy = sorted(zip(xvals, yvals))
+    xy = sorted(zip(safe_xvals, safe_yvals))
     ax.plot([v[0] for v in xy], [p(v[0]) for v in xy], color='purple', label='polyfit degree {}'.format(poly), linewidth=1)
     ax.legend()
-
 
   if zlabel is not None:
     if not z_color and not z_cmap:

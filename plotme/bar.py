@@ -13,7 +13,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
-def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, xlabel_rotation, category, colours, stacked, z_annot, x_label_add_n, annot_color, dpi=300):
+def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, xlabel_rotation, category, colours, stacked, z_annot, x_label_add_n, annot_color, y_annot, dpi=300):
   '''
     xlabel: groups on x axis
     ylabel: colours
@@ -158,6 +158,14 @@ def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
   ax.set_xticklabels(xvals, rotation=xlabel_rotation)
   #ax.legend(loc='upper right')
 
+  if y_annot is not None:
+    for ya in y_annot: # of the form label=height
+      color = 'red'
+      if ':' in ya:
+        ya, color = ya.split(':')
+      label, height = ya.split('=', maxsplit=1)
+      ax.axhline(float(height), color=color, linewidth=1) 
+
   # place legend at right based on https://stackoverflow.com/questions/10101700/moving-matplotlib-legend-outside-of-the-axis-makes-it-cutoff-by-the-figure-box/10154763#10154763
   handles, labels = ax.get_legend_handles_labels()
   labels_seen = set()
@@ -203,11 +211,12 @@ if __name__ == '__main__':
   parser.add_argument('--fontsize', required=False, type=float, default=8, help='font size')
   parser.add_argument('--dpi', default=300, type=float, help='dpi')
   parser.add_argument('--x_label_rotation', required=False, default='horizontal', help='label rotation')
+  parser.add_argument('--y_annot', required=False, nargs='*', help='add horizontal lines of the form label=height')
   args = parser.parse_args()
   if args.verbose:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.DEBUG)
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_bar(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.x_label_rotation, args.category, args.colours, args.stacked, args.z_annot, args.x_label_add_n, args.annot_color, args.dpi)
+  plot_bar(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.x_label_rotation, args.category, args.colours, args.stacked, args.z_annot, args.x_label_add_n, args.annot_color, args.y_annot, args.dpi)
 

@@ -181,6 +181,7 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
         ya, color = ya.split(':')
       label, height = ya.split('=', maxsplit=1)
       ax.axhline(float(height), color=color, linewidth=1) 
+      ax.annotate(label, (min(xvals), float(height) + 0.005), fontsize=8)
 
   # must do this after plotting
   to_include = []

@@ -18,7 +18,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
-def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fig_width, fig_height, fontsize, bins, y_log, stacked, normalise, max_x, stats):
+def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fig_width, fig_height, fontsize, bins, y_log, stacked, normalise, max_x, stats, x_annot):
   '''
   '''
   logging.info('starting...')
@@ -75,6 +75,15 @@ def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fi
       plt.axvline(x=mean, label='{} mean {:.2f}'.format(key, mean), ls=':')
       plt.text(mean, hy.max(), '{} mean'.format(key), ha='right', va='top', rotation=90)
 
+  if x_annot is not None:
+    for xa in x_annot: # of the form label=height
+      color = 'red'
+      if ':' in xa:
+        xa, color = xa.split(':')
+      label, x = xa.split('=', maxsplit=1)
+      ax.axvline(float(x), color=color, linewidth=1) 
+      ax.annotate(label, (float(x), 0 + 0.005), fontsize=8)
+
   # this does overlap
   #else:
   #  for key in sorted(results.keys()):
@@ -123,11 +132,12 @@ if __name__ == '__main__':
   parser.add_argument('--width', required=False, type=float, default=12, help='width of plot')
   parser.add_argument('--fontsize', required=False, type=float, default=8, help='font size')
   parser.add_argument('--max', required=False, type=float, help='max x-value')
+  parser.add_argument('--x_annot', required=False, nargs='*', help='add vertical lines of the form label=x')
   args = parser.parse_args()
   if args.verbose:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.DEBUG)
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_hist(sys.stdin, args.target, args.label, args.value, args.title, args.x_label, args.y_label, args.width, args.height, args.fontsize, args.bins, args.y_log, args.stacked, args.normalise, args.max, args.stats)
+  plot_hist(sys.stdin, args.target, args.label, args.value, args.title, args.x_label, args.y_label, args.width, args.height, args.fontsize, args.bins, args.y_log, args.stacked, args.normalise, args.max, args.stats, args.x_annot)
 

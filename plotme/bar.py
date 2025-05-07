@@ -165,6 +165,7 @@ def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
         ya, color = ya.split(':')
       label, height = ya.split('=', maxsplit=1)
       ax.axhline(float(height), color=color, linewidth=1) 
+      ax.annotate(label, (min(xvals), float(height) + 0.005), fontsize=8)
 
   # place legend at right based on https://stackoverflow.com/questions/10101700/moving-matplotlib-legend-outside-of-the-axis-makes-it-cutoff-by-the-figure-box/10154763#10154763
   handles, labels = ax.get_legend_handles_labels()

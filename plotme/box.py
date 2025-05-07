@@ -16,7 +16,7 @@ from pylab import rcParams
 
 COLORS=['#003f5c', '#2f4b7c', '#ffa600', '#a05195', '#665191', '#ff7c43', '#f95d6a', '#d45087']
 
-def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, significance, significance_nobar, separator, include_zero=False, x_label_rotation='vertical', y_log=False, annotate=None, annotate_location=None, include_other=None, violin=False, y_counts=False, color_index=0, colors=COLORS, y_max=None, sig_ends=0.01, colors_special=None, no_legend=False, sig_fontsize=8, markersize=6, linewidth=1, dpi=300, horizontal=False):
+def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, significance, significance_nobar, separator, include_zero=False, x_label_rotation='vertical', y_log=False, annotate=None, annotate_location=None, include_other=None, violin=False, y_counts=False, color_index=0, colors=COLORS, y_max=None, sig_ends=0.01, colors_special=None, no_legend=False, sig_fontsize=8, markersize=6, linewidth=1, dpi=300, horizontal=False, y_annot=None):
   '''
     xlabel: groups on x axis
     ylabel: colours
@@ -174,6 +174,14 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
   ax.set_xticklabels([x.replace('/', '\n') for x in xvals], rotation=x_label_rotation) # can use / for eol
   ax.set_xlim((-1, max(ind) + 1 + width))
 
+  if y_annot is not None:
+    for ya in y_annot: # of the form label=height
+      color = 'red'
+      if ':' in ya:
+        ya, color = ya.split(':')
+      label, height = ya.split('=', maxsplit=1)
+      ax.axhline(float(height), color=color, linewidth=1) 
+
   # must do this after plotting
   to_include = []
   if include_zero:
@@ -252,11 +260,12 @@ if __name__ == '__main__':
   parser.add_argument('--dpi', default=300, type=float, help='dpi')
   parser.add_argument('--horizontal', action='store_true', help='horizontal boxplot') # doesn't work
   parser.add_argument('--no_legend', action='store_true', help='no legend')
+  parser.add_argument('--y_annot', required=False, nargs='*', help='add horizontal lines of the form label=height')
   args = parser.parse_args()
   if args.verbose:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.DEBUG)
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.significance, args.significance_nobar, args.separator, args.include_zero, args.x_label_rotation, args.y_log, args.annotate, args.annotate_location, args.include_other, args.violin, args.y_counts, args.color_index, args.colors, args.y_max, args.significance_ends, args.colors_special, args.no_legend, args.sig_fontsize, args.markersize, args.linewidth, args.dpi, args.horizontal)
+  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.significance, args.significance_nobar, args.separator, args.include_zero, args.x_label_rotation, args.y_log, args.annotate, args.annotate_location, args.include_other, args.violin, args.y_counts, args.color_index, args.colors, args.y_max, args.significance_ends, args.colors_special, args.no_legend, args.sig_fontsize, args.markersize, args.linewidth, args.dpi, args.horizontal, args.y_annot)
 

@@ -37,24 +37,20 @@ def density_scatter( x, y, color, fig=None, ax=None, sort=True, bins=10, ranges=
 
     # histogram method
     data, x_e, y_e = numpy.histogram2d(x, y, bins=bins, density=True)
-    #new_xs = numpy.arange(min(x), max(x), (max(x)-min(x)) / 100)
-    #new_ys = numpy.arange(min(y), max(y), (max(y)-min(y)) / 100)
+
+    # not used
     xstart = min(x) * 0.95
     xfinish = max(x) * 1.05
     ystart = min(y) * 0.95
     yfinish = max(y) * 1.05
 
-    #new_xs, new_ys = numpy.mgrid[xstart:xfinish:(xfinish-xstart)/100, ystart:yfinish:(yfinish-ystart)/100]
     stepx = (ranges[1]-ranges[0])/resolution
     stepy = (ranges[3]-ranges[2])/resolution
     new_xs, new_ys = numpy.mgrid[ranges[0]-stepx:ranges[1]+stepx:stepx, ranges[2]-stepy:ranges[3]+stepy:stepy]
     new_xs = new_xs.flatten()
     new_ys = new_ys.flatten()
-    #logging.info('%s-%s %s-%s', min(x), max(x), min(y), max(y))
 
-    #z = scipy.interpolate.interpn( (0.5*(x_e[1:] + x_e[:-1]) , 0.5*(y_e[1:]+y_e[:-1]) ), data, numpy.vstack([x,y]).T, method = "splinef2d", bounds_error = False)
-    #z = scipy.interpolate.interpn( (0.5*(x_e[1:] + x_e[:-1]) , 0.5*(y_e[1:]+y_e[:-1]) ), data, numpy.vstack([new_xs, new_ys]).T, method = "splinef2d", bounds_error = False)
-    z = scipy.interpolate.interpn( (0.5*(x_e[1:] + x_e[:-1]) , 0.5*(y_e[1:]+y_e[:-1]) ), data, numpy.vstack([new_xs, new_ys]).T, method = "linear", bounds_error = False)
+    z = scipy.interpolate.interpn( (0.5*(x_e[1:] + x_e[:-1]) , 0.5*(y_e[1:]+y_e[:-1]) ), data, numpy.vstack([new_xs, new_ys]).T, method="linear", bounds_error = False)
     z[numpy.where(numpy.isnan(z))] = 0.0
 
     # Sort the points by density, so that the densest points are plotted last
@@ -73,23 +69,11 @@ def density_scatter( x, y, color, fig=None, ax=None, sort=True, bins=10, ranges=
     zs = []
     mx = (None, None)
     for n, i in enumerate(z):
-    #  c = matplotlib.colors.to_rgb(color)
-    #  with_alpha = (c[0] * i, c[1] * i, c[2] * i)
-      #logging.info(i)
       if i < cutoff:
         zs.append(0)
       else:
         zs.append(i)
-    #logging.info(zs)
-    logging.info(min(new_xs))
-    logging.info(max(new_xs))
-    ax.scatter(new_xs, new_ys, c=color, zorder=0, s=5 * (100/resolution) * (100/resolution), alpha=zs, marker='s', **kwargs)
-    #ax.pcolormesh([new_xs, new_ys], cmap="viridis", zorder=0, alpha=z) #, s=500, marker='o', **kwargs)
-
-    #norm = matplotlib.colors.Normalize(vmin = numpy.min(z), vmax = numpy.max(z))
-    #cbar = fig.colorbar(matplotlib.cm.ScalarMappable(norm = norm), ax=ax)
-    #cbar.ax.set_ylabel('Density')
-
+    ax.scatter(new_xs, new_ys, c=color, zorder=0, s=20 * (100/resolution) * (100/resolution), alpha=zs, marker='o', **kwargs)
     return ax
 
 def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=18, x_log=False, y_log=False, title=None, x_label=None, y_label=None, wiggle=0, delimiter='\t', z_color=None, z_color_map=None, label=None, join=False, y_annot=None, x_annot=None, dpi=72, markersize=20, z_cmap=None, x_squiggem=0.005, y_squiggem=0.005, marker='o', lines=[], line_of_best_fit=False, line_of_best_fit_by_category=False, projectionlabel=None, projectionview=None, include_zero=False, max_x=None, max_y=None, skip=True, poly=None, density=False, density_bins=10, density_cutoff=0.4, density_resolution=100):
@@ -287,7 +271,7 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
     for idx, zval in enumerate(zvals_seen):
       vals = [list(x) for x in zip(xvals, yvals, zvals, cvals, mvals) if x[2] == zval]
       #if idx == 1:
-      density_scatter([x[0] for x in vals], [x[1] for x in vals], color=vals[0][3], fig=fig, ax=ax, sort=True, bins=density_bins, ranges=(min(safe_xvals), max(safe_xvals), min(safe_yvals), max(safe_yvals)), cutoff=density_cutoff, resolution=density_resolution)
+      density_scatter([x[0] for x in vals], [x[1] for x in vals], color=vals[0][3], fig=fig, ax=ax, sort=False, bins=density_bins, ranges=(min(safe_xvals), max(safe_xvals), min(safe_yvals), max(safe_yvals)), cutoff=density_cutoff, resolution=density_resolution)
 
   if zlabel is not None:
     if not z_color and not z_cmap:

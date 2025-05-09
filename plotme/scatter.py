@@ -28,7 +28,7 @@ MARKERS = ('^', 'x', 'v', 'o', '<', '>', '1', '2', '3', '4', '8', 's', 'p', 'P',
 CMAP_DEFAULT= (0.6, 0.6, 0.6, 0.5)  # non-numeric => black
 
 # based on https://stackoverflow.com/questions/20105364/how-can-i-make-a-scatter-plot-colored-by-density/53865762#53865762
-def density_scatter( x, y, color, fig=None, ax=None, sort=True, bins=10, ranges=None, cutoff=None, resolution=100, **kwargs):
+def density_scatter( x, y, color, fig=None, ax=None, sort=True, bins=10, ranges=None, cutoff=None, resolution=100, markersize=None, **kwargs):
     """
     Scatter plot colored by 2d histogram
     """
@@ -38,11 +38,19 @@ def density_scatter( x, y, color, fig=None, ax=None, sort=True, bins=10, ranges=
     # histogram method
     data, x_e, y_e = numpy.histogram2d(x, y, bins=bins, density=True)
 
-    # not used
-    xstart = min(x) * 0.95
-    xfinish = max(x) * 1.05
-    ystart = min(y) * 0.95
-    yfinish = max(y) * 1.05
+    # expand
+    expanded = []
+    expanded.append([0] * (len(data[0]) + 2))
+    for row in data:
+      expanded.append([0] + list(row) + [0])
+    expanded.append([0] * (len(data[0]) + 2))
+    
+    diff = x_e[1] - x_e[0]
+    x_e = numpy.insert(x_e, 0, x_e[0] - diff)
+    x_e = numpy.append(x_e, [x_e[-1] + diff])
+    diff = y_e[1] - y_e[0]
+    y_e = numpy.insert(y_e, 0, y_e[0] - diff)
+    y_e = numpy.append(y_e, [y_e[-1] + diff])
 
     stepx = (ranges[1]-ranges[0])/resolution
     stepy = (ranges[3]-ranges[2])/resolution
@@ -50,7 +58,8 @@ def density_scatter( x, y, color, fig=None, ax=None, sort=True, bins=10, ranges=
     new_xs = new_xs.flatten()
     new_ys = new_ys.flatten()
 
-    z = scipy.interpolate.interpn( (0.5*(x_e[1:] + x_e[:-1]) , 0.5*(y_e[1:]+y_e[:-1]) ), data, numpy.vstack([new_xs, new_ys]).T, method="linear", bounds_error = False)
+    z = scipy.interpolate.interpn( (0.5*(x_e[1:] + x_e[:-1]) , 0.5*(y_e[1:]+y_e[:-1]) ), expanded, numpy.vstack([new_xs, new_ys]).T, method="linear", bounds_error = False)
+    #z = scipy.interpolate.interpn( (0.5*(x_e[1:] + x_e[:-1]) , 0.5*(y_e[1:]+y_e[:-1]) ), data, numpy.vstack([new_xs, new_ys]).T, method="linear", bounds_error = False)
     z[numpy.where(numpy.isnan(z))] = 0.0
 
     # Sort the points by density, so that the densest points are plotted last
@@ -73,10 +82,11 @@ def density_scatter( x, y, color, fig=None, ax=None, sort=True, bins=10, ranges=
         zs.append(0)
       else:
         zs.append(i)
-    ax.scatter(new_xs, new_ys, c=color, zorder=0, s=20 * (100/resolution) * (100/resolution), alpha=zs, marker='o', **kwargs)
+    markersize = markersize or 20 * (100/resolution) * (100/resolution)
+    ax.scatter(new_xs, new_ys, c=color, zorder=0, s=markersize, alpha=zs, marker='s', **kwargs)
     return ax
 
-def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=18, x_log=False, y_log=False, title=None, x_label=None, y_label=None, wiggle=0, delimiter='\t', z_color=None, z_color_map=None, label=None, join=False, y_annot=None, x_annot=None, dpi=72, markersize=20, z_cmap=None, x_squiggem=0.005, y_squiggem=0.005, marker='o', lines=[], line_of_best_fit=False, line_of_best_fit_by_category=False, projectionlabel=None, projectionview=None, include_zero=False, max_x=None, max_y=None, skip=True, poly=None, density=False, density_bins=10, density_cutoff=0.4, density_resolution=100):
+def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=18, x_log=False, y_log=False, title=None, x_label=None, y_label=None, wiggle=0, delimiter='\t', z_color=None, z_color_map=None, label=None, join=False, y_annot=None, x_annot=None, dpi=72, markersize=20, z_cmap=None, x_squiggem=0.005, y_squiggem=0.005, marker='o', lines=[], line_of_best_fit=False, line_of_best_fit_by_category=False, projectionlabel=None, projectionview=None, include_zero=False, max_x=None, max_y=None, skip=True, poly=None, density=False, density_bins=10, density_cutoff=0.4, density_resolution=100, density_markersize=None):
   logging.info('starting...')
   try:
     matplotlib.style.use('seaborn-v0_8')
@@ -271,7 +281,7 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
     for idx, zval in enumerate(zvals_seen):
       vals = [list(x) for x in zip(xvals, yvals, zvals, cvals, mvals) if x[2] == zval]
       #if idx == 1:
-      density_scatter([x[0] for x in vals], [x[1] for x in vals], color=vals[0][3], fig=fig, ax=ax, sort=False, bins=density_bins, ranges=(min(safe_xvals), max(safe_xvals), min(safe_yvals), max(safe_yvals)), cutoff=density_cutoff, resolution=density_resolution)
+      density_scatter([x[0] for x in vals], [x[1] for x in vals], color=vals[0][3], fig=fig, ax=ax, sort=False, bins=density_bins, ranges=(min(safe_xvals), max(safe_xvals), min(safe_yvals), max(safe_yvals)), cutoff=density_cutoff, resolution=density_resolution, markersize=density_markersize)
 
   if zlabel is not None:
     if not z_color and not z_cmap:
@@ -373,6 +383,7 @@ if __name__ == '__main__':
   parser.add_argument('--density_bins', required=False, default=10, type=int, help='add a density overlay')
   parser.add_argument('--density_cutoff', required=False, default=0.0, type=float, help='add a density overlay')
   parser.add_argument('--density_resolution', required=False, default=100, type=int, help='add a density overlay')
+  parser.add_argument('--density_markersize', required=False, type=int, help='add a density overlay')
   parser.add_argument('--verbose', action='store_true', help='more logging')
   parser.add_argument('--target', required=False, default='plot.png', help='plot filename')
   args = parser.parse_args()
@@ -392,4 +403,4 @@ if __name__ == '__main__':
     # make animation
     os.system('ffmpeg -r 4 -i anim-%02d.png -vcodec libx264 -acodec aac {}.mp4'.format(args.target))
   else:
-    plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit, args.line_of_best_fit_by_category, args.projection, args.projection_view, args.include_zero, args.max_x, args.max_y, poly=args.polyfit, density=args.density, density_bins=args.density_bins, density_cutoff=args.density_cutoff, density_resolution=args.density_resolution)
+    plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit, args.line_of_best_fit_by_category, args.projection, args.projection_view, args.include_zero, args.max_x, args.max_y, poly=args.polyfit, density=args.density, density_bins=args.density_bins, density_cutoff=args.density_cutoff, density_resolution=args.density_resolution, density_markersize=args.density_markersize)

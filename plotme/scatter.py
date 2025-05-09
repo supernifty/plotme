@@ -11,21 +11,88 @@ import sys
 import matplotlib
 # turn this off for show
 # matplotlib.use('Agg')
+import matplotlib.colors 
 import matplotlib.pyplot as plt
+
 from pylab import rcParams
 
 #import numpy.polynomial
 import numpy
 import numpy.random
 import scipy.stats
-
+import scipy.interpolate 
 import plotme.settings
 
 COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
 MARKERS = ('^', 'x', 'v', 'o', '<', '>', '1', '2', '3', '4', '8', 's', 'p', 'P', '*', 'h', 'H', '+', 'X', 'D', 'd', '.', ',', '|', '_')
 CMAP_DEFAULT= (0.6, 0.6, 0.6, 0.5)  # non-numeric => black
 
-def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=18, x_log=False, y_log=False, title=None, x_label=None, y_label=None, wiggle=0, delimiter='\t', z_color=None, z_color_map=None, label=None, join=False, y_annot=None, x_annot=None, dpi=72, markersize=20, z_cmap=None, x_squiggem=0.005, y_squiggem=0.005, marker='o', lines=[], line_of_best_fit=False, line_of_best_fit_by_category=False, projectionlabel=None, projectionview=None, include_zero=False, max_x=None, max_y=None, skip=True, poly=None):
+# based on https://stackoverflow.com/questions/20105364/how-can-i-make-a-scatter-plot-colored-by-density/53865762#53865762
+def density_scatter( x, y, color, fig=None, ax=None, sort=True, bins=10, ranges=None, cutoff=None, resolution=100, **kwargs):
+    """
+    Scatter plot colored by 2d histogram
+    """
+    if ax is None:
+      fig, ax = plt.subplots()
+
+    # histogram method
+    data, x_e, y_e = numpy.histogram2d(x, y, bins=bins, density=True)
+    #new_xs = numpy.arange(min(x), max(x), (max(x)-min(x)) / 100)
+    #new_ys = numpy.arange(min(y), max(y), (max(y)-min(y)) / 100)
+    xstart = min(x) * 0.95
+    xfinish = max(x) * 1.05
+    ystart = min(y) * 0.95
+    yfinish = max(y) * 1.05
+
+    #new_xs, new_ys = numpy.mgrid[xstart:xfinish:(xfinish-xstart)/100, ystart:yfinish:(yfinish-ystart)/100]
+    stepx = (ranges[1]-ranges[0])/resolution
+    stepy = (ranges[3]-ranges[2])/resolution
+    new_xs, new_ys = numpy.mgrid[ranges[0]-stepx:ranges[1]+stepx:stepx, ranges[2]-stepy:ranges[3]+stepy:stepy]
+    new_xs = new_xs.flatten()
+    new_ys = new_ys.flatten()
+    #logging.info('%s-%s %s-%s', min(x), max(x), min(y), max(y))
+
+    #z = scipy.interpolate.interpn( (0.5*(x_e[1:] + x_e[:-1]) , 0.5*(y_e[1:]+y_e[:-1]) ), data, numpy.vstack([x,y]).T, method = "splinef2d", bounds_error = False)
+    #z = scipy.interpolate.interpn( (0.5*(x_e[1:] + x_e[:-1]) , 0.5*(y_e[1:]+y_e[:-1]) ), data, numpy.vstack([new_xs, new_ys]).T, method = "splinef2d", bounds_error = False)
+    z = scipy.interpolate.interpn( (0.5*(x_e[1:] + x_e[:-1]) , 0.5*(y_e[1:]+y_e[:-1]) ), data, numpy.vstack([new_xs, new_ys]).T, method = "linear", bounds_error = False)
+    z[numpy.where(numpy.isnan(z))] = 0.0
+
+    # Sort the points by density, so that the densest points are plotted last
+    if sort:
+      xs = []
+      ys = []
+      zs = []
+      for idx in z.argsort():
+        xs.append(new_xs[idx])
+        ys.append(new_ys[idx])
+        zs.append(z[idx])
+      new_xs, new_ys, z = xs, ys, zs
+    znorm = matplotlib.colors.Normalize(vmin = numpy.min(z), vmax = numpy.max(z))
+    z = znorm(z)
+
+    zs = []
+    mx = (None, None)
+    for n, i in enumerate(z):
+    #  c = matplotlib.colors.to_rgb(color)
+    #  with_alpha = (c[0] * i, c[1] * i, c[2] * i)
+      #logging.info(i)
+      if i < cutoff:
+        zs.append(0)
+      else:
+        zs.append(i)
+    #logging.info(zs)
+    logging.info(min(new_xs))
+    logging.info(max(new_xs))
+    ax.scatter(new_xs, new_ys, c=color, zorder=0, s=5 * (100/resolution) * (100/resolution), alpha=zs, marker='s', **kwargs)
+    #ax.pcolormesh([new_xs, new_ys], cmap="viridis", zorder=0, alpha=z) #, s=500, marker='o', **kwargs)
+
+    #norm = matplotlib.colors.Normalize(vmin = numpy.min(z), vmax = numpy.max(z))
+    #cbar = fig.colorbar(matplotlib.cm.ScalarMappable(norm = norm), ax=ax)
+    #cbar.ax.set_ylabel('Density')
+
+    return ax
+
+def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=18, x_log=False, y_log=False, title=None, x_label=None, y_label=None, wiggle=0, delimiter='\t', z_color=None, z_color_map=None, label=None, join=False, y_annot=None, x_annot=None, dpi=72, markersize=20, z_cmap=None, x_squiggem=0.005, y_squiggem=0.005, marker='o', lines=[], line_of_best_fit=False, line_of_best_fit_by_category=False, projectionlabel=None, projectionview=None, include_zero=False, max_x=None, max_y=None, skip=True, poly=None, density=False, density_bins=10, density_cutoff=0.4, density_resolution=100):
   logging.info('starting...')
   try:
     matplotlib.style.use('seaborn-v0_8')
@@ -160,9 +227,9 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
       marker = vals[0][4]
       if projectionlabel is None:
         if join:
-          ax.plot([x[0] for x in vals], [x[1] for x in vals], markersize=markersize, marker=marker, label=zval, alpha=0.8)
+          ax.plot([x[0] for x in vals], [x[1] for x in vals], c=[x[3] for x in vals], markersize=markersize, marker=marker, label=zval, alpha=0.8)
         else:
-          ax.scatter([x[0] for x in vals], [x[1] for x in vals], s=markersize, marker=marker, label=zval, alpha=0.8)
+          ax.scatter([x[0] for x in vals], [x[1] for x in vals], c=[x[3] for x in vals], s=markersize, marker=marker, label=zval, alpha=0.8)
       else:
         if join:
           ax.plot([x[0] for x in vals], [x[1] for x in vals], c=vals[0][3], markersize=markersize, marker=marker, label=zval, alpha=0.8)
@@ -187,7 +254,7 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
     if join:
       ax.plot(xvals, yvals)
 
-  if line_of_best_fit is not None or poly is not None:
+  if line_of_best_fit is not None or poly is not None or density is not None:
     safe_vals = [xy for xy in zip(xvals, yvals) if not math.isnan(xy[1])]
     safe_xvals = [xy[0] for xy in safe_vals]
     safe_yvals = [xy[1] for xy in safe_vals]
@@ -215,6 +282,12 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
     xy = sorted(zip(safe_xvals, safe_yvals))
     ax.plot([v[0] for v in xy], [p(v[0]) for v in xy], color='purple', label='polyfit degree {}'.format(poly), linewidth=1)
     ax.legend()
+
+  if density: # assume by category
+    for idx, zval in enumerate(zvals_seen):
+      vals = [list(x) for x in zip(xvals, yvals, zvals, cvals, mvals) if x[2] == zval]
+      #if idx == 1:
+      density_scatter([x[0] for x in vals], [x[1] for x in vals], color=vals[0][3], fig=fig, ax=ax, sort=True, bins=density_bins, ranges=(min(safe_xvals), max(safe_xvals), min(safe_yvals), max(safe_yvals)), cutoff=density_cutoff, resolution=density_resolution)
 
   if zlabel is not None:
     if not z_color and not z_cmap:
@@ -312,6 +385,10 @@ if __name__ == '__main__':
   parser.add_argument('--include_zero', action='store_true', help='include zero o both axes')
   parser.add_argument('--max_x', type=float, required=False, help='include this value in x')
   parser.add_argument('--max_y', type=float, required=False, help='include this value in y')
+  parser.add_argument('--density', action='store_true', help='add a density overlay')
+  parser.add_argument('--density_bins', required=False, default=10, type=int, help='add a density overlay')
+  parser.add_argument('--density_cutoff', required=False, default=0.0, type=float, help='add a density overlay')
+  parser.add_argument('--density_resolution', required=False, default=100, type=int, help='add a density overlay')
   parser.add_argument('--verbose', action='store_true', help='more logging')
   parser.add_argument('--target', required=False, default='plot.png', help='plot filename')
   args = parser.parse_args()
@@ -331,4 +408,4 @@ if __name__ == '__main__':
     # make animation
     os.system('ffmpeg -r 4 -i anim-%02d.png -vcodec libx264 -acodec aac {}.mp4'.format(args.target))
   else:
-    plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit, args.line_of_best_fit_by_category, args.projection, args.projection_view, args.include_zero, args.max_x, args.max_y, poly=args.polyfit)
+    plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit, args.line_of_best_fit_by_category, args.projection, args.projection_view, args.include_zero, args.max_x, args.max_y, poly=args.polyfit, density=args.density, density_bins=args.density_bins, density_cutoff=args.density_cutoff, density_resolution=args.density_resolution)

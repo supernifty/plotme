@@ -97,7 +97,7 @@ python plotme/swimmer.py --data test/swimmer.tsv --indicator Sex --start 50
 Add umap columns to a table
 
 ```
-python plotme/umap_helper.py --cols 'Sepal Length' 'Sepal Width' 'Petal Length' 'Petal Width' --cluster < test/iris.tsv > iris.umap.tsv
+python plotme/umap_helper.py --cols 'Sepal Length' 'Sepal Width' 'Petal Length' 'Petal Width' --cluster --normalise < test/iris.tsv > iris.umap.tsv
 ```
 
 Now you can view the clustering as a scatter plot:

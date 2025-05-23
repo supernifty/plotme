@@ -11,8 +11,10 @@ import sys
 import umap
 
 import sklearn.cluster
+import sklearn.decomposition
+import sklearn.preprocessing
 
-def main(ifh, ofh, cols, prefix, cluster, exclude):
+def main(ifh, ofh, cols, prefix, cluster, exclude, normalise):
   logging.info('starting...')
   raw = []
   rows = []
@@ -23,6 +25,12 @@ def main(ifh, ofh, cols, prefix, cluster, exclude):
       raw.append([float(r[x]) for x in r if x not in cols])
     else:
       raw.append([float(r[x]) for x in cols])
+
+  # normalise!
+  if normalise:
+    scaler = sklearn.preprocessing.StandardScaler()
+    scaled = scaler.fit_transform(raw)
+    raw = scaled
 
   logging.info('umap calculation...')
   embedding = umap.UMAP(random_state=42).fit_transform(raw)
@@ -58,6 +66,7 @@ if __name__ == '__main__':
   parser.add_argument('--exclude', action='store_true', help='exclude specified cols')
   parser.add_argument('--prefix', required=False, default='', help='prepend to start of added column names')
   parser.add_argument('--cluster', action='store_true', help='also cluster the data')
+  parser.add_argument('--normalise', action='store_true', help='normalise features')
   parser.add_argument('--verbose', action='store_true', help='more logging')
   args = parser.parse_args()
   if args.verbose:
@@ -65,5 +74,5 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  main(sys.stdin, sys.stdout, args.cols, args.prefix, args.cluster, args.exclude)
+  main(sys.stdin, sys.stdout, args.cols, args.prefix, args.cluster, args.exclude, args.normalise)
 

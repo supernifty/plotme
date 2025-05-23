@@ -35,7 +35,7 @@ def density_scatter( x, y, color, fig=None, ax=None, sort=True, bins=10, ranges=
     if ax is None:
       fig, ax = plt.subplots()
 
-    # histogram method
+    # histogram method 
     data, x_e, y_e = numpy.histogram2d(x, y, bins=bins, density=True)
 
     # expand

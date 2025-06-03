@@ -87,7 +87,7 @@ def density_scatter( x, y, color, fig=None, ax=None, sort=True, bins=10, ranges=
     ax.scatter(new_xs, new_ys, c=color, zorder=0, s=markersize, alpha=zs, marker='s', **kwargs)
     return ax
 
-def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=18, x_log=False, y_log=False, title=None, x_label=None, y_label=None, wiggle=0, delimiter='\t', z_color=None, z_color_map=None, label=None, join=False, y_annot=None, x_annot=None, dpi=72, markersize=20, z_cmap=None, x_squiggem=0.005, y_squiggem=0.005, marker='o', lines=[], line_of_best_fit=False, line_of_best_fit_by_category=False, projectionlabel=None, projectionview=None, include_zero=False, max_x=None, max_y=None, skip=True, poly=None, density=False, density_bins=10, density_cutoff=0.4, density_resolution=100, density_markersize=None, density_opacity=0.5):
+def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=18, x_log=False, y_log=False, title=None, x_label=None, y_label=None, wiggle=0, delimiter='\t', z_color=None, z_color_map=None, label=None, join=False, y_annot=None, x_annot=None, dpi=72, markersize=20, z_cmap=None, x_squiggem=0.005, y_squiggem=0.005, marker='o', lines=[], line_of_best_fit=False, line_of_best_fit_by_category=False, projectionlabel=None, projectionview=None, include_zero=False, max_x=None, max_y=None, skip=True, poly=None, density=False, density_bins=10, density_cutoff=0.4, density_resolution=100, density_markersize=None, density_opacity=0.5, density_buckets=5):
   logging.info('starting...')
   try:
     matplotlib.style.use('seaborn-v0_8')
@@ -285,8 +285,17 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
         #if idx == 1:
         density_scatter([x[0] for x in vals], [x[1] for x in vals], color=vals[0][3], fig=fig, ax=ax, sort=False, bins=density_bins, ranges=(min(safe_xvals), max(safe_xvals), min(safe_yvals), max(safe_yvals)), cutoff=density_cutoff, resolution=density_resolution, markersize=density_markersize, opacity=density_opacity)
     else:
-      logging.info('safe_xvals: %i', len(safe_xvals))
-      density_scatter(safe_xvals, safe_yvals, color='#6060c0', fig=fig, ax=ax, sort=False, bins=density_bins, ranges=(min(safe_xvals), max(safe_xvals), min(safe_yvals), max(safe_yvals)), cutoff=density_cutoff, resolution=density_resolution, markersize=density_markersize, opacity=density_opacity)
+      zvals = [float(z) for z in zvals]
+      for cmap_bucket in range(density_buckets):
+        # only want xys in range
+        lower = cmap_bucket / density_buckets * (max(zvals) - min(zvals)) + min(zvals) 
+        upper = (cmap_bucket + 1) / density_buckets * (max(zvals) - min(zvals)) + min(zvals)
+        vals = [list(x) for x in zip(xvals, yvals, zvals, cvals) if lower <= x[2] < upper] # TODO highest value
+        logging.info('bucket %i has range %f-%f and %i values', cmap_bucket, lower, upper, len(vals))
+        cmap_color = m.to_rgba(cmap_bucket / density_buckets * (max(zvals) - min(zvals)) + min(zvals))
+        logging.info(cmap_color)
+        # figure cmap color
+        density_scatter([x[0] for x in vals], [x[1] for x in vals], color=cmap_color, fig=fig, ax=ax, sort=False, bins=density_bins, ranges=(min(safe_xvals), max(safe_xvals), min(safe_yvals), max(safe_yvals)), cutoff=density_cutoff, resolution=density_resolution, markersize=density_markersize, opacity=density_opacity)
 
   if zlabel is not None:
     if not z_color and not z_cmap:

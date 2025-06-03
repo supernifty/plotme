@@ -45,6 +45,7 @@ def density_scatter( x, y, color, fig=None, ax=None, sort=True, bins=10, ranges=
       expanded.append([0] + list(row) + [0])
     expanded.append([0] * (len(data[0]) + 2))
     
+    # make grid
     diff = x_e[1] - x_e[0]
     x_e = numpy.insert(x_e, 0, x_e[0] - diff)
     x_e = numpy.append(x_e, [x_e[-1] + diff])
@@ -278,10 +279,14 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
     ax.legend()
 
   if density: # assume by category
-    for idx, zval in enumerate(zvals_seen):
-      vals = [list(x) for x in zip(xvals, yvals, zvals, cvals, mvals) if x[2] == zval]
-      #if idx == 1:
-      density_scatter([x[0] for x in vals], [x[1] for x in vals], color=vals[0][3], fig=fig, ax=ax, sort=False, bins=density_bins, ranges=(min(safe_xvals), max(safe_xvals), min(safe_yvals), max(safe_yvals)), cutoff=density_cutoff, resolution=density_resolution, markersize=density_markersize, opacity=density_opacity)
+    if len(zvals_seen) > 0:
+      for idx, zval in enumerate(zvals_seen):
+        vals = [list(x) for x in zip(xvals, yvals, zvals, cvals, mvals) if x[2] == zval]
+        #if idx == 1:
+        density_scatter([x[0] for x in vals], [x[1] for x in vals], color=vals[0][3], fig=fig, ax=ax, sort=False, bins=density_bins, ranges=(min(safe_xvals), max(safe_xvals), min(safe_yvals), max(safe_yvals)), cutoff=density_cutoff, resolution=density_resolution, markersize=density_markersize, opacity=density_opacity)
+    else:
+      logging.info('safe_xvals: %i', len(safe_xvals))
+      density_scatter(safe_xvals, safe_yvals, color='#6060c0', fig=fig, ax=ax, sort=False, bins=density_bins, ranges=(min(safe_xvals), max(safe_xvals), min(safe_yvals), max(safe_yvals)), cutoff=density_cutoff, resolution=density_resolution, markersize=density_markersize, opacity=density_opacity)
 
   if zlabel is not None:
     if not z_color and not z_cmap:

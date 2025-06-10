@@ -291,9 +291,7 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
         lower = cmap_bucket / density_buckets * (max(zvals) - min(zvals)) + min(zvals) 
         upper = (cmap_bucket + 1) / density_buckets * (max(zvals) - min(zvals)) + min(zvals)
         vals = [list(x) for x in zip(xvals, yvals, zvals, cvals) if lower <= x[2] < upper] # TODO highest value
-        logging.info('bucket %i has range %f-%f and %i values', cmap_bucket, lower, upper, len(vals))
         cmap_color = m.to_rgba(cmap_bucket / density_buckets * (max(zvals) - min(zvals)) + min(zvals))
-        logging.info(cmap_color)
         # figure cmap color
         density_scatter([x[0] for x in vals], [x[1] for x in vals], color=cmap_color, fig=fig, ax=ax, sort=False, bins=density_bins, ranges=(min(safe_xvals), max(safe_xvals), min(safe_yvals), max(safe_yvals)), cutoff=density_cutoff, resolution=density_resolution, markersize=density_markersize, opacity=density_opacity)
 

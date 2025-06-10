@@ -72,6 +72,8 @@ def plot_heat(data_fh, target, xlabel, ylabel, zlabel, textlabel=None, width=12,
         if row[zlabel] not in zmap:
           zmap[row[zlabel]] = len(zmap)
         zval = zmap[row[zlabel]]
+      elif row[zlabel] == '':
+        continue
       elif log:
         zval = math.log(float(row[zlabel]) + 1.0)
       else:

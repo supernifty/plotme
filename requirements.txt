@@ -1,5 +1,6 @@
 matplotlib
 numpy
+plotly
 scipy
 seaborn
 umap-learn

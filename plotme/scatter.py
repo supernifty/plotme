@@ -87,7 +87,7 @@ def density_scatter( x, y, color, fig=None, ax=None, sort=True, bins=10, ranges=
     ax.scatter(new_xs, new_ys, c=color, zorder=0, s=markersize, alpha=zs, marker='s', **kwargs)
     return ax
 
-def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=18, x_log=False, y_log=False, title=None, x_label=None, y_label=None, wiggle=0, delimiter='\t', z_color=None, z_color_map=None, label=None, join=False, y_annot=None, x_annot=None, dpi=72, markersize=20, z_cmap=None, x_squiggem=0.005, y_squiggem=0.005, marker='o', lines=[], line_of_best_fit=False, line_of_best_fit_by_category=False, projectionlabel=None, projectionview=None, include_zero=False, max_x=None, max_y=None, skip=True, poly=None, density=False, density_bins=10, density_cutoff=0.4, density_resolution=100, density_markersize=None, density_opacity=0.5, density_buckets=5):
+def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=18, x_log=False, y_log=False, title=None, x_label=None, y_label=None, wiggle=0, delimiter='\t', z_color=None, z_color_map=None, label=None, join=False, y_annot=None, x_annot=None, dpi=72, markersize=20, z_cmap=None, x_squiggem=0.005, y_squiggem=0.005, marker='o', lines=[], line_of_best_fit=False, line_of_best_fit_by_category=False, projectionlabel=None, projectionview=None, include_zero=False, max_x=None, max_y=None, skip=True, poly=None, density=False, density_bins=10, density_cutoff=0.4, density_resolution=100, density_markersize=None, density_opacity=0.5, density_buckets=5, nolegend=False):
   logging.info('starting...')
   try:
     matplotlib.style.use('seaborn-v0_8')
@@ -124,6 +124,7 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
         projection.append(float(row[projectionlabel]) + (numpy.random.normal() - 0.5) * 2 * wiggle)
       # process z
       if zlabel is not None:
+        row[zlabel] = 'none' if row[zlabel] == '' else row[zlabel]
         if row[zlabel] not in zvals_seen and z_cmap is None:
           zvals_seen.append(row[zlabel])
 
@@ -230,7 +231,8 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
           ax.plot([x[0] for x in vals], [x[1] for x in vals], c=vals[0][3], markersize=markersize, marker=marker, label=zval, alpha=0.8)
         else:
           ax.scatter([x[0] for x in vals], [x[1] for x in vals], zs=[x[5] for x in vals], c=[x[3] for x in vals], s=markersize, marker=marker, label=zval, alpha=0.8)
-      ax.legend()
+      if not nolegend:
+        ax.legend()
       #if join: # TODO does this work?
       #  ax.join([x[0] for x in vals], [x[1] for x in vals], c=[x[3] for x in vals], marker=vals[0][4], label=zval, alpha=0.8)
   elif z_cmap is not None:
@@ -260,7 +262,8 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
     yvals_res = [res.intercept + res.slope * xval for xval in safe_xvals]
     correlation = scipy.stats.pearsonr(safe_xvals, safe_yvals)
     ax.plot(safe_xvals, yvals_res, color='orange', label='correlation {:.3f}\ngradient {:.3f}\npvalue {:.3f}'.format(correlation[0], res.slope, correlation[1]), linewidth=1)
-    ax.legend()
+    if not nolegend:
+      ax.legend()
 
   if line_of_best_fit_by_category:
     for zval in zvals_seen:
@@ -269,14 +272,16 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
       yvals_res = [res.intercept + res.slope * xval for xval in xvals]
       correlation = scipy.stats.pearsonr([x[0] for x in vals], [x[1] for x in vals])
       ax.plot(xvals, yvals_res, color=vals[0][3], label='{} correlation {:.3f}\ngradient {:.3f}\npvalue {:.3f}'.format(zval, correlation[0], res.slope, correlation[1]), linewidth=1)
-      ax.legend()
+      if not nolegend:
+        ax.legend()
 
   if poly is not None:
     res = numpy.polyfit(safe_xvals, safe_yvals, poly)
     p = numpy.poly1d(res)
     xy = sorted(zip(safe_xvals, safe_yvals))
     ax.plot([v[0] for v in xy], [p(v[0]) for v in xy], color='purple', label='polyfit degree {}'.format(poly), linewidth=1)
-    ax.legend()
+    if not nolegend:
+      ax.legend()
 
   if density: # assume by category
     if len(zvals_seen) > 0:
@@ -397,6 +402,7 @@ if __name__ == '__main__':
   parser.add_argument('--density_resolution', required=False, default=100, type=int, help='add a density overlay')
   parser.add_argument('--density_markersize', required=False, type=int, help='add a density overlay')
   parser.add_argument('--density_opacity', required=False, type=float, default=0.5, help='opacity of density overlay')
+  parser.add_argument('--nolegend', action='store_true', help='do not add a legend')
   parser.add_argument('--verbose', action='store_true', help='more logging')
   parser.add_argument('--target', required=False, default='plot.png', help='plot filename')
   args = parser.parse_args()
@@ -416,4 +422,4 @@ if __name__ == '__main__':
     # make animation
     os.system('ffmpeg -r 4 -i anim-%02d.png -vcodec libx264 -acodec aac {}.mp4'.format(args.target))
   else:
-    plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit, args.line_of_best_fit_by_category, args.projection, args.projection_view, args.include_zero, args.max_x, args.max_y, poly=args.polyfit, density=args.density, density_bins=args.density_bins, density_cutoff=args.density_cutoff, density_resolution=args.density_resolution, density_markersize=args.density_markersize, density_opacity=args.density_opacity)
+    plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit, args.line_of_best_fit_by_category, args.projection, args.projection_view, args.include_zero, args.max_x, args.max_y, poly=args.polyfit, density=args.density, density_bins=args.density_bins, density_cutoff=args.density_cutoff, density_resolution=args.density_resolution, density_markersize=args.density_markersize, density_opacity=args.density_opacity, nolegend=args.nolegend)

@@ -13,7 +13,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
-def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, xlabel_rotation, category, colours, stacked, z_annot, x_label_add_n, annot_color, y_annot, dpi=300):
+def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, xlabel_rotation, category, colours, stacked, z_annot, x_label_add_n, annot_color, y_annot, x_order_seen, dpi=300):
   '''
     xlabel: groups on x axis
     ylabel: colours
@@ -32,6 +32,7 @@ def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
   yvals = set()
   max_zval = 0.0
   categories = {}
+  x_seen = []
   for row in csv.DictReader(data_fh, delimiter='\t'):
     try:
       included += 1
@@ -40,7 +41,10 @@ def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
         yval = '0' # sub-group axis value
       else:
         yval = row[ylabel] # sub-group axis value
+      if xval not in xvals:
+        x_seen.append(xval)
       xvals.add(xval)
+     
       yvals.add(yval)
       zval = float(row[zlabel])
       max_zval = max(max_zval, zval)
@@ -60,10 +64,13 @@ def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
     logging.warn('No data to plot')
     return
 
-  if x_order is None:
+  if x_order_seen:
+    xvals = x_seen
+  elif x_order is None:
     xvals = sorted(list(xvals)) # groups
   else:
     xvals = x_order # groups
+
   if y_order is None:
     yvals = sorted(list(yvals)) # sub-groups
   else:
@@ -213,11 +220,12 @@ if __name__ == '__main__':
   parser.add_argument('--dpi', default=300, type=float, help='dpi')
   parser.add_argument('--x_label_rotation', required=False, default='horizontal', help='label rotation')
   parser.add_argument('--y_annot', required=False, nargs='*', help='add horizontal lines of the form label=height')
+  parser.add_argument('--x_order_seen', action='store_true', help='x values in order they appear in input file')
   args = parser.parse_args()
   if args.verbose:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.DEBUG)
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_bar(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.x_label_rotation, args.category, args.colours, args.stacked, args.z_annot, args.x_label_add_n, args.annot_color, args.y_annot, args.dpi)
+  plot_bar(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.x_label_rotation, args.category, args.colours, args.stacked, args.z_annot, args.x_label_add_n, args.annot_color, args.y_annot, args.x_order_seen, args.dpi)
 

@@ -8,25 +8,29 @@ import sys
 
 import matplotlib.pyplot as plt
 
-def main(ifh, col, target, title, order, colors, nolegend):
+def main(ifh, col, target, title, order, colors, nolegend, value, minval):
   # CLNSIG  Count   Pct
   # Pathogenic      133     0.055
   
   rs = collections.defaultdict(float)
   logging.info('reading stdin...')
   for r in csv.DictReader(ifh, delimiter='\t'):
-    
-    rs[r[col]] += 1
+    if value is None:
+      rs[r[col]] += 1
+    else:
+      rs[r[col]] += float(r[value])
   
   logging.info('generating %s from %s...', target, rs)
   fig = plt.figure(figsize=(12, 6))
   ax = fig.add_subplot(111) 
   if order is None:
-    labels = sorted([k for k in rs])
+    labels = sorted([k for k in rs if rs[k] >= minval])
   else:
-    labels = [k for k in order if k in rs]
+    labels = [k for k in order if k in rs and rs[k] >= minval]
     if colors is not None:
-      colors = [k[1] for k in zip(order, colors) if k[0] in rs]
+      colormap = {k[0]: k[1] for k in zip(order, colors)}
+      logging.info(colormap)
+      colors = [colormap[k] for k in labels]
   values = [rs[k] for k in labels]
 
   ax.pie(values, labels=labels, colors=colors, autopct='%.0f%%', labeldistance=None, textprops={'fontsize': 16})
@@ -43,10 +47,12 @@ def main(ifh, col, target, title, order, colors, nolegend):
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='pie graph')
   parser.add_argument('--target', required=True, help='more logging')
-  parser.add_argument('--col', required=True, help='more logging')
+  parser.add_argument('--col', required=True, help='category')
+  parser.add_argument('--value', required=False, help='get value from this col')
   parser.add_argument('--title', required=False, help='more logging')
-  parser.add_argument('--order', required=False, nargs='*', help='more logging')
-  parser.add_argument('--colors', required=False, nargs='*', help='more logging')
+  parser.add_argument('--order', required=False, nargs='*', help='order to show cats')
+  parser.add_argument('--colors', required=False, nargs='*', help='list of colors matching order')
+  parser.add_argument('--minval', required=False, type=float, default=-1e99, help='minimum value to include')
   parser.add_argument('--nolegend', action='store_true', help='more logging')
   parser.add_argument('--verbose', action='store_true', help='more logging')
   args = parser.parse_args()
@@ -55,4 +61,4 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  main(sys.stdin, args.col, args.target, args.title, args.order, args.colors, args.nolegend)
+  main(sys.stdin, args.col, args.target, args.title, args.order, args.colors, args.nolegend, args.value, args.minval)

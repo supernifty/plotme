@@ -58,7 +58,7 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
   logging.info('finished reading %i of %i records with range %.2f to %.2f', included, total, min_zval, max_zval)
 
   if len(results) == 0:
-    logging.warn('No data to plot')
+    logging.warning('No data to plot')
     return
 
   if x_order is None:

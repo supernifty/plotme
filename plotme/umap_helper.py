@@ -135,7 +135,7 @@ def main(ifh, ofh, cols, prefix, cluster, exclude, normalise, cluster_umap, min_
       # embeddings
       for n in range(dim):
         ru[0]['{}umap{}'.format(prefix, n)] = ru[1][n]
-      n = dim
+      n = 2
       if cluster:
         ru[0]['{}cluster'.format(prefix)] = ru[2]
         ru[0]['{}cluster_prob'.format(prefix)] = ru[3]
@@ -144,7 +144,7 @@ def main(ifh, ofh, cols, prefix, cluster, exclude, normalise, cluster_umap, min_
         ru[0]['{}cluster_umap'.format(prefix)] = ru[n]
         ru[0]['{}cluster_umap_prob'.format(prefix)] = ru[n + 1]
         if cluster_settings:
-          for cn in range(dim):
+          for cn in range(cluster_settings_dim):
             #logging.info('%i %i %s', i, cn, clusterable_embedding[i][cn])
             ru[0]['{}umap_clusterable{}'.format(prefix, cn)] = clusterable_embedding[i][cn]
       odw.writerow(ru[0])

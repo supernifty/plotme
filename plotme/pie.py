@@ -8,7 +8,7 @@ import sys
 
 import matplotlib.pyplot as plt
 
-def main(ifh, col, target, title, order, colors, nolegend, value, minval):
+def main(ifh, col, target, title, order, colors, nolegend, value, minval, nolabels):
   # CLNSIG  Count   Pct
   # Pathogenic      133     0.055
   
@@ -33,7 +33,11 @@ def main(ifh, col, target, title, order, colors, nolegend, value, minval):
       colors = [colormap[k] for k in labels]
   values = [rs[k] for k in labels]
 
-  ax.pie(values, labels=labels, colors=colors, autopct='%.0f%%', labeldistance=None, textprops={'fontsize': 16})
+  if nolabels:
+    logging.info('no labels')
+    ax.pie(values, labels=None, colors=colors)
+  else:
+    ax.pie(values, labels=labels, colors=colors, autopct='%.0f%%', labeldistance=None, textprops={'fontsize': 16})
   
   #ax.pie([rs[x] for x in ORDER], labels=ORDER, colors=[COLOR[v] for v in ORDER], autopct='%.0f%%', labeldistance=None, textprops={'fontsize': 16})
   #ax.legend(labels=ORDER, loc='center right')
@@ -54,6 +58,7 @@ if __name__ == '__main__':
   parser.add_argument('--colors', required=False, nargs='*', help='list of colors matching order')
   parser.add_argument('--minval', required=False, type=float, default=-1e99, help='minimum value to include')
   parser.add_argument('--nolegend', action='store_true', help='more logging')
+  parser.add_argument('--nolabels', action='store_true', help='more logging')
   parser.add_argument('--verbose', action='store_true', help='more logging')
   args = parser.parse_args()
   if args.verbose:
@@ -61,4 +66,4 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  main(sys.stdin, args.col, args.target, args.title, args.order, args.colors, args.nolegend, args.value, args.minval)
+  main(sys.stdin, args.col, args.target, args.title, args.order, args.colors, args.nolegend, args.value, args.minval, args.nolabels)

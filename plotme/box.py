@@ -16,10 +16,11 @@ from pylab import rcParams
 
 COLORS=['#003f5c', '#2f4b7c', '#ffa600', '#a05195', '#665191', '#ff7c43', '#f95d6a', '#d45087']
 
-def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, significance, significance_nobar, separator, include_zero=False, x_label_rotation='vertical', y_log=False, annotate=None, annotate_location=None, include_other=None, violin=False, y_counts=False, color_index=0, colors=COLORS, y_max=None, sig_ends=0.01, colors_special=None, no_legend=False, sig_fontsize=8, markersize=6, linewidth=1, dpi=300, horizontal=False, y_annot=None):
+def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, significance, significance_nobar, separator, include_zero=False, x_label_rotation='vertical', y_log=False, annotate=None, annotate_location=None, include_other=None, violin=False, y_counts=False, color_index=0, colors=COLORS, y_max=None, sig_ends=0.01, colors_special=None, no_legend=False, sig_fontsize=8, markersize=6, linewidth=1, dpi=300, horizontal=False, y_annot=None, points=False, points_jitter=0.05):
   '''
     xlabel: groups on x axis
     ylabel: colours
+    zlabel: values (height)
   '''
   logging.info('starting...')
 
@@ -100,7 +101,7 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
   special_count = 0
   boxes = []
   positions = []
-  for idx in range(len(yvals)):
+  for idx in range(len(yvals)): # each group
     offset = idx * width * 0.9 - (len(yvals) - 1) * width / 2 # offset of each bar compared to ind (x centre for each group)
     #offset = idx * width * 0.9 - (len(yvals) - 1) * width / 2 # offset of each bar compared to ind (x centre for each group)
     vals = [results['{},{}'.format(x, yvals[idx])] for x in xvals]
@@ -128,7 +129,11 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
         #rects = ax.boxplot(val, notch=0, sym='k+', vert=1, whis=1.5, positions=position, widths=width * 0.85, patch_artist=True, flierprops=dict(marker='k+', markersize=markersize, markerfacecolor='k', markeredgecolor='k'), boxprops=dict(facecolor=color), medianprops=dict(color='#000000'))
         #rects = ax.boxplot(val, notch=0, sym='k+', whis=1.5, positions=position, widths=width * 0.85, patch_artist=True, flierprops=dict(marker='k+', markersize=markersize, markeredgecolor='k', markeredgewidth=0.2), boxprops=dict(facecolor=color, linewidth=linewidth), capprops=dict(linewidth=linewidth), medianprops=dict(color='#000000', linewidth=linewidth), whiskerprops=dict(linewidth=linewidth), vert=not horizontal)
         #logging.info('plotting %s', val)
-        rects = ax.boxplot(val, notch=0, sym='k+', whis=1.5, positions=position, widths=width * 0.85, patch_artist=True, flierprops=dict(marker='k+', markersize=markersize, markeredgecolor='k', markeredgewidth=0.2), boxprops=dict(facecolor=color, linewidth=linewidth), capprops=dict(linewidth=linewidth), medianprops=dict(color='#000000', linewidth=linewidth), whiskerprops=dict(linewidth=linewidth), vert=not horizontal)
+        rects = ax.boxplot(val, notch=0, sym='k+', whis=1.5, positions=position, widths=width * 0.85, patch_artist=True, flierprops=dict(marker='k+', markersize=markersize, markeredgecolor='k', markeredgewidth=0.2), boxprops=dict(facecolor=color, linewidth=linewidth, alpha=0.7), capprops=dict(linewidth=linewidth), medianprops=dict(color='#000000', linewidth=linewidth), whiskerprops=dict(linewidth=linewidth), vert=not horizontal)
+        if points:
+          x = np.random.normal(position, points_jitter, size=len(val))
+          ax.scatter(x, val, alpha=0.6, s=20, color='black') #color=color)
+
       positions.extend(position)
       boxes.append(rects)
     #for rect in rects:
@@ -261,6 +266,8 @@ if __name__ == '__main__':
   parser.add_argument('--dpi', default=300, type=float, help='dpi')
   parser.add_argument('--horizontal', action='store_true', help='horizontal boxplot') # doesn't work
   parser.add_argument('--no_legend', action='store_true', help='no legend')
+  parser.add_argument('--points', action='store_true', help='include individual points')
+  parser.add_argument('--points_jitter', type=float, default=0.05, help='include individual points')
   parser.add_argument('--y_annot', required=False, nargs='*', help='add horizontal lines of the form label=height')
   args = parser.parse_args()
   if args.verbose:
@@ -268,5 +275,5 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.significance, args.significance_nobar, args.separator, args.include_zero, args.x_label_rotation, args.y_log, args.annotate, args.annotate_location, args.include_other, args.violin, args.y_counts, args.color_index, args.colors, args.y_max, args.significance_ends, args.colors_special, args.no_legend, args.sig_fontsize, args.markersize, args.linewidth, args.dpi, args.horizontal, args.y_annot)
+  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.significance, args.significance_nobar, args.separator, args.include_zero, args.x_label_rotation, args.y_log, args.annotate, args.annotate_location, args.include_other, args.violin, args.y_counts, args.color_index, args.colors, args.y_max, args.significance_ends, args.colors_special, args.no_legend, args.sig_fontsize, args.markersize, args.linewidth, args.dpi, args.horizontal, args.y_annot, args.points, args.points_jitter)
 

@@ -50,15 +50,15 @@ def main(ifh, col, target, title, order, colors, nolegend, value, minval, nolabe
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(description='pie graph')
-  parser.add_argument('--target', required=True, help='more logging')
+  parser.add_argument('--target', required=False, default='plot.png', help='output filename')
   parser.add_argument('--col', required=True, help='category')
   parser.add_argument('--value', required=False, help='get value from this col')
   parser.add_argument('--title', required=False, help='more logging')
   parser.add_argument('--order', required=False, nargs='*', help='order to show cats')
   parser.add_argument('--colors', required=False, nargs='*', help='list of colors matching order')
   parser.add_argument('--minval', required=False, type=float, default=-1e99, help='minimum value to include')
-  parser.add_argument('--nolegend', action='store_true', help='more logging')
-  parser.add_argument('--nolabels', action='store_true', help='more logging')
+  parser.add_argument('--nolegend', action='store_true', help='do not include a legend')
+  parser.add_argument('--nolabels', action='store_true', help='do not include labels')
   parser.add_argument('--verbose', action='store_true', help='more logging')
   args = parser.parse_args()
   if args.verbose:

@@ -59,6 +59,10 @@ python plotme/pair_plot.py --x1 x --x2 y --x1_name Apples --x2_name Oranges < te
 ```
 
 ### pie.py
+Use col as the category column and val as the value column.
+```
+python plotme/pie.py --col Class --val 'Sepal Length' < test/iris.tsv
+```
 
 ### scatter.py
 Generate a scatter plot.

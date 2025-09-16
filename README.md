@@ -20,6 +20,7 @@ Generate a box plot with main category (x) and optional sub-category (y) with va
 
 ```
 python plotme/box.py --x x --y y --z z < test/box.tsv
+python plotme/box.py --x Class --z 'Sepal Length' --points --points_jitter 0.1 < test/iris.tsv
 ```
 
 ### density.py

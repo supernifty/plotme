@@ -13,7 +13,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
-def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, xlabel_rotation, category, colours, stacked, z_annot, x_label_add_n, annot_color, y_annot, x_order_seen, dpi=300):
+def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, xlabel_rotation, category, colours, stacked, z_annot, x_label_add_n, annot_color, y_annot, x_order_seen, dpi=300, ci_low=None, ci_high=None):
   '''
     xlabel: groups on x axis
     ylabel: colours
@@ -30,6 +30,7 @@ def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
   results = {}
   xvals = set()
   yvals = set()
+  cis = {}
   max_zval = 0.0
   categories = {}
   x_seen = []
@@ -50,6 +51,8 @@ def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
       max_zval = max(max_zval, zval)
       xy = '{},{}'.format(xval, yval)
       results[xy] = zval
+      if ci_low is not None:
+        cis[xy] = (zval - float(row[ci_low]), float(row[ci_high]) - zval)
       logging.debug('Added %s = %f', xy, zval)
       if category is not None:
         categories[xy] = row[category]
@@ -100,17 +103,22 @@ def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
     else:
       offset = idx * width * 0.9 - (len(yvals) - 1) * width / 2
     vals = [results.get('{},{}'.format(x, yvals[idx]), 0) for x in xvals] # each xval with that yval
+    if len(cis) > 0:
+      yerr = [cis.get('{},{}'.format(x, yvals[idx]), (0, 0)) for x in xvals] # each xval with that yval
+      yerr = [[item[0] for item in yerr], [item[1] for item in yerr]]
+      logging.info(yerr)
+
     if bottom is None:
       bottom = [0] * len(vals)
     logging.debug('adding values %s for %s at %s', vals, yvals[idx], ind + offset)
 
     if category is None:
       if stacked and bottom is not None:
-        rects = ax.bar(ind + offset, vals, width * 0.85, label=yvals[idx], bottom=bottom) 
+        rects = ax.bar(ind + offset, vals, width * 0.85, yerr=yerr, label=yvals[idx], bottom=bottom) 
       else:
-        rects = ax.bar(ind + offset, vals, width * 0.85, label=yvals[idx]) 
+        rects = ax.bar(ind + offset, vals, width * 0.85, yerr=yerr, label=yvals[idx]) 
     else:
-      rects = ax.bar(ind + offset, vals, width * 0.85) 
+      rects = ax.bar(ind + offset, vals, width * 0.85, yerr=yerr) 
     
     for rect, val, b in zip(rects, xvals, bottom):
       height = rect.get_height()
@@ -201,6 +209,8 @@ if __name__ == '__main__':
   parser.add_argument('--x', required=True, help='x column name')
   parser.add_argument('--y', required=False, help='y column name')
   parser.add_argument('--z', required=True, help='z column name')
+  parser.add_argument('--ci_low', required=False, help='ci column name')
+  parser.add_argument('--ci_high', required=False, help='ci column name')
   parser.add_argument('--z_annot', required=False, help='format for values (default is :.2f)')
   parser.add_argument('--annot_color', required=False, default='black', help='color for annot')
   parser.add_argument('--category', required=False, help='additional category column')
@@ -227,5 +237,5 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_bar(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.x_label_rotation, args.category, args.colours, args.stacked, args.z_annot, args.x_label_add_n, args.annot_color, args.y_annot, args.x_order_seen, args.dpi)
+  plot_bar(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.x_label_rotation, args.category, args.colours, args.stacked, args.z_annot, args.x_label_add_n, args.annot_color, args.y_annot, args.x_order_seen, args.dpi, args.ci_low, args.ci_high)
 

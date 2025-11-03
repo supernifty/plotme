@@ -13,6 +13,7 @@ Generate a bar chart with main category (x) and optional sub-category (y) with v
 
 ```
 python plotme/bar.py --x x --y y --z z < test/box.tsv
+python plotme/bar.py --x 'Sepal Length' --z 'Sepal Width' --ci_low 'Sepal Low' --ci_high 'Sepal High' < test/err.tsv
 ```
 
 ### box

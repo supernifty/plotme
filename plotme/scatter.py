@@ -26,6 +26,7 @@ import plotme.settings
 COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
 MARKERS = ('^', 'x', 'v', 'o', '<', '>', '1', '2', '3', '4', '8', 's', 'p', 'P', '*', 'h', 'H', '+', 'X', 'D', 'd', '.', ',', '|', '_')
 CMAP_DEFAULT= (0.6, 0.6, 0.6, 0.5)  # non-numeric => black
+SKIP = ('', 'n/a', 'data', 'x')
 
 # based on https://stackoverflow.com/questions/20105364/how-can-i-make-a-scatter-plot-colored-by-density/53865762#53865762
 def density_scatter( x, y, color, fig=None, ax=None, sort=True, bins=10, ranges=None, cutoff=None, resolution=100, markersize=None, opacity=0.5, **kwargs):
@@ -87,7 +88,7 @@ def density_scatter( x, y, color, fig=None, ax=None, sort=True, bins=10, ranges=
     ax.scatter(new_xs, new_ys, c=color, zorder=0, s=markersize, alpha=zs, marker='s', **kwargs)
     return ax
 
-def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=18, x_log=False, y_log=False, title=None, x_label=None, y_label=None, wiggle=0, delimiter='\t', z_color=None, z_color_map=None, label=None, join=False, y_annot=None, x_annot=None, dpi=72, markersize=20, z_cmap=None, x_squiggem=0.005, y_squiggem=0.005, marker='o', lines=[], line_of_best_fit=False, line_of_best_fit_by_category=False, projectionlabel=None, projectionview=None, include_zero=False, max_x=None, max_y=None, skip=True, poly=None, density=False, density_bins=10, density_cutoff=0.4, density_resolution=100, density_markersize=None, density_opacity=0.5, density_buckets=5, nolegend=False):
+def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=18, x_log=False, y_log=False, title=None, x_label=None, y_label=None, wiggle=0, delimiter='\t', z_color=None, z_color_map=None, label=None, join=False, y_annot=None, x_annot=None, dpi=72, markersize=20, z_cmap=None, x_squiggem=0.005, y_squiggem=0.005, marker='o', lines=[], line_of_best_fit=False, line_of_best_fit_by_category=False, projectionlabel=None, projectionview=None, include_zero=False, max_x=None, max_y=None, skip=True, poly=None, density=False, density_bins=10, density_cutoff=0.4, density_resolution=100, density_markersize=None, density_opacity=0.5, density_buckets=5, nolegend=False, skipvals=SKIP):
   logging.info('starting...')
   try:
     matplotlib.style.use('seaborn-v0_8')
@@ -113,7 +114,7 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
 
   for row in csv.DictReader(data_fh, delimiter=delimiter):
     try:
-      if skip and row[xlabel] == '' or row[ylabel] == '':
+      if skip and (row[xlabel] in SKIP or row[ylabel] in SKIP):
         continue
       included += 1
       xval = float(row[xlabel]) + (numpy.random.normal() - 0.5) * 2 * wiggle # x axis value
@@ -327,7 +328,7 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
         xa, color = xa.split(':')
       label, width = xa.split('=')
       logging.debug('labelling line at %s with %s', width, label)
-      ax.axvline(float(width), color='red', linewidth=1)
+      ax.axvline(float(width), color=color, linewidth=1)
       ax.annotate(label, (float(width) + x_squiggem, min(yvals)), fontsize=8)
 
   if lines is not None:

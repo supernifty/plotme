@@ -19,6 +19,7 @@ from pylab import rcParams
 #import numpy.polynomial
 import numpy
 import numpy.random
+from statsmodels.nonparametric.smoothers_lowess import lowess
 import scipy.stats
 import scipy.interpolate 
 import plotme.settings
@@ -418,9 +419,9 @@ if __name__ == '__main__':
     for x in range(1, 89, 1):
       v = [20, x, 0]
       logging.info('frame %i', n)
-      plot_scatter(ifh, 'anim-{:02d}.png'.format(n), args.x, args.y, args.z, args.figsize, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit, args.line_of_best_fit_by_category, args.projection, v, poly=args.poly)
+      plot_scatter(ifh, 'anim-{:02d}.png'.format(n), args.x, args.y, args.z, args.figsize, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit, args.line_of_best_fit_by_category, args.projection, v, poly=args.poly, loess=args.loess, loess_frac=args.loess_frac)
       n += 1      
     # make animation
     os.system('ffmpeg -r 4 -i anim-%02d.png -vcodec libx264 -acodec aac {}.mp4'.format(args.target))
   else:
-    plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit, args.line_of_best_fit_by_category, args.projection, args.projection_view, args.include_zero, args.max_x, args.max_y, poly=args.polyfit, density=args.density, density_bins=args.density_bins, density_cutoff=args.density_cutoff, density_resolution=args.density_resolution, density_markersize=args.density_markersize, density_opacity=args.density_opacity, nolegend=args.nolegend)
+    plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit, args.line_of_best_fit_by_category, args.projection, args.projection_view, args.include_zero, args.max_x, args.max_y, poly=args.polyfit, loess=args.loess, loess_frac=args.loess_frac, density=args.density, density_bins=args.density_bins, density_cutoff=args.density_cutoff, density_resolution=args.density_resolution, density_markersize=args.density_markersize, density_opacity=args.density_opacity, nolegend=args.nolegend)

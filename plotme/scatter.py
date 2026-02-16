@@ -89,7 +89,7 @@ def density_scatter( x, y, color, fig=None, ax=None, sort=True, bins=10, ranges=
     ax.scatter(new_xs, new_ys, c=color, zorder=0, s=markersize, alpha=zs, marker='s', **kwargs)
     return ax
 
-def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=18, x_log=False, y_log=False, title=None, x_label=None, y_label=None, wiggle=0, delimiter='\t', z_color=None, z_color_map=None, label=None, join=False, y_annot=None, x_annot=None, dpi=72, markersize=20, z_cmap=None, x_squiggem=0.005, y_squiggem=0.005, marker='o', lines=[], line_of_best_fit=False, line_of_best_fit_by_category=False, projectionlabel=None, projectionview=None, include_zero=False, max_x=None, max_y=None, skip=True, poly=None, loess=False, loess_frac=None, density=False, density_bins=10, density_cutoff=0.4, density_resolution=100, density_markersize=None, density_opacity=0.5, density_buckets=5, nolegend=False, skipvals=SKIP):
+def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figwidth=12, figheight=8, fontsize=18, x_log=False, y_log=False, title=None, x_label=None, y_label=None, wiggle=0, delimiter='\t', z_color=None, z_color_map=None, label=None, join=False, y_annot=None, x_annot=None, dpi=72, markersize=20, z_cmap=None, x_squiggem=0.005, y_squiggem=0.005, marker='o', lines=[], line_of_best_fit=False, line_of_best_fit_by_category=False, projectionlabel=None, projectionview=None, include_zero=False, max_x=None, max_y=None, skip=True, poly=None, loess=False, loess_frac=None, density=False, density_bins=10, density_cutoff=0.4, density_resolution=100, density_markersize=None, density_opacity=0.5, density_buckets=5, nolegend=False, skipvals=SKIP):
   logging.info('starting...')
   try:
     matplotlib.style.use('seaborn-v0_8')
@@ -192,7 +192,7 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
     return
 
   matplotlib.rcParams.update({'font.size': fontsize})
-  fig = plt.figure(figsize=(figsize, 1 + int(figsize * len(yvals) / len(xvals))))
+  fig = plt.figure(figsize=(figwidth, figheight))
   if projectionlabel is None:
     ax = fig.add_subplot(111)
   else:
@@ -288,7 +288,7 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
   # LOESS / LOWESS smoothing
   if loess:
     smoothed = lowess(safe_yvals, safe_xvals, frac=loess_frac, return_sorted=True)
-    ax.plot(smoothed[:, 0], smoothed[:, 1], color='green', label=f'LOESS frac={loess_frac}', linewidth=1)
+    ax.plot(smoothed[:, 0], smoothed[:, 1], color='red', label=f'LOESS frac={loess_frac}', linewidth=2)
     if not nolegend:
       ax.legend()
 
@@ -383,7 +383,8 @@ if __name__ == '__main__':
   parser.add_argument('--title', required=False, help='z column name')
   parser.add_argument('--x_label', required=False, help='label on x axis')
   parser.add_argument('--y_label', required=False, help='label on y axis')
-  parser.add_argument('--figsize', required=False, default=12, type=float, help='figsize width')
+  parser.add_argument('--figwidth', required=False, default=12, type=float, help='figsize width')
+  parser.add_argument('--figheight', required=False, default=8, type=float, help='figsize height')
   parser.add_argument('--fontsize', required=False, default=18, type=int, help='fontsize')
   parser.add_argument('--markersize', required=False, default=20, type=int, help='fontsize')
   parser.add_argument('--marker', required=False, default='o', help='default marker')
@@ -428,9 +429,9 @@ if __name__ == '__main__':
     for x in range(1, 89, 1):
       v = [20, x, 0]
       logging.info('frame %i', n)
-      plot_scatter(ifh, 'anim-{:02d}.png'.format(n), args.x, args.y, args.z, args.figsize, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit, args.line_of_best_fit_by_category, args.projection, v, poly=args.poly, loess=args.loess, loess_frac=args.loess_frac)
+      plot_scatter(ifh, 'anim-{:02d}.png'.format(n), args.x, args.y, args.z, args.figwidth, args.figheight, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit, args.line_of_best_fit_by_category, args.projection, v, poly=args.poly, loess=args.loess, loess_frac=args.loess_frac)
       n += 1      
     # make animation
     os.system('ffmpeg -r 4 -i anim-%02d.png -vcodec libx264 -acodec aac {}.mp4'.format(args.target))
   else:
-    plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figsize, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit, args.line_of_best_fit_by_category, args.projection, args.projection_view, args.include_zero, args.max_x, args.max_y, poly=args.polyfit, loess=args.loess, loess_frac=args.loess_frac, density=args.density, density_bins=args.density_bins, density_cutoff=args.density_cutoff, density_resolution=args.density_resolution, density_markersize=args.density_markersize, density_opacity=args.density_opacity, nolegend=args.nolegend)
+    plot_scatter(sys.stdin, args.target, args.x, args.y, args.z, args.figwidth, args.figheight, args.fontsize, args.x_log, args.y_log, args.title, args.x_label, args.y_label, args.wiggle, args.delimiter, args.z_color, args.z_color_map, args.label, args.join, args.y_annot, args.x_annot, args.dpi, args.markersize, args.z_cmap, args.x_squiggem, args.y_squiggem, args.marker, args.lines, args.line_of_best_fit, args.line_of_best_fit_by_category, args.projection, args.projection_view, args.include_zero, args.max_x, args.max_y, poly=args.polyfit, loess=args.loess, loess_frac=args.loess_frac, density=args.density, density_bins=args.density_bins, density_cutoff=args.density_cutoff, density_resolution=args.density_resolution, density_markersize=args.density_markersize, density_opacity=args.density_opacity, nolegend=args.nolegend)

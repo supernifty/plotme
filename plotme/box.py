@@ -16,7 +16,7 @@ from pylab import rcParams
 
 COLORS=['#003f5c', '#2f4b7c', '#ffa600', '#a05195', '#665191', '#ff7c43', '#f95d6a', '#d45087']
 
-def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, significance, significance_nobar, separator, include_zero=False, x_label_rotation='vertical', y_log=False, annotate=None, annotate_location=None, include_other=None, violin=False, y_counts=False, color_index=0, colors=COLORS, y_max=None, sig_ends=0.01, colors_special=None, no_legend=False, sig_fontsize=8, markersize=6, linewidth=1, dpi=300, horizontal=False, y_annot=None, points=False, points_jitter=0.05):
+def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, significance, significance_nobar, separator, include_zero=False, x_label_rotation='vertical', y_log=False, annotate=None, annotate_location=None, include_other=None, violin=False, y_counts=False, color_index=0, colors=COLORS, y_max=None, sig_ends=0.01, colors_special=None, no_legend=False, sig_fontsize=8, markersize=6, linewidth=1, dpi=300, horizontal=False, y_annot=None, points=False, points_jitter=0.05, x_order_seen=False):
   '''
     xlabel: groups on x axis
     ylabel: colours
@@ -34,6 +34,7 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
   included = total = 0
   results = collections.defaultdict(list)
   xvals = set()
+  x_seen = []
   yvals_count = collections.defaultdict(int)
   max_zval = -1e99
   min_zval = 1e99
@@ -45,6 +46,8 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
         yval = ''
       else:
         yval = row[ylabel] # sub-group axis name
+      if xval not in xvals:
+        x_seen.append(xval) # remember order
       xvals.add(xval)
       yvals_count[yval] += 1
       zval = float(row[zlabel]) # value
@@ -62,7 +65,10 @@ def plot_box(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
     logging.warning('No data to plot')
     return
 
-  if x_order is None:
+  if x_order_seen:
+    xvals = x_seen # groups
+    logging.info(xvals)
+  elif x_order is None:
     xvals = sorted(list(xvals)) # groups
   else:
     xvals = x_order # groups
@@ -240,6 +246,7 @@ if __name__ == '__main__':
   parser.add_argument('--y_label', required=False, help='label on y axis')
   parser.add_argument('--x_label', required=False, help='label on x axis')
   parser.add_argument('--x_order', required=False, nargs='*', help='order of x axis')
+  parser.add_argument('--x_order_seen', action='store_true', help='x values in order they appear in input file')
   parser.add_argument('--y_order', required=False, nargs='*', help='order of y axis')
   parser.add_argument('--separator', action='store_true', help='vertical separator')
   parser.add_argument('--verbose', action='store_true', help='more logging')
@@ -275,5 +282,5 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.significance, args.significance_nobar, args.separator, args.include_zero, args.x_label_rotation, args.y_log, args.annotate, args.annotate_location, args.include_other, args.violin, args.y_counts, args.color_index, args.colors, args.y_max, args.significance_ends, args.colors_special, args.no_legend, args.sig_fontsize, args.markersize, args.linewidth, args.dpi, args.horizontal, args.y_annot, args.points, args.points_jitter)
+  plot_box(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.significance, args.significance_nobar, args.separator, args.include_zero, args.x_label_rotation, args.y_log, args.annotate, args.annotate_location, args.include_other, args.violin, args.y_counts, args.color_index, args.colors, args.y_max, args.significance_ends, args.colors_special, args.no_legend, args.sig_fontsize, args.markersize, args.linewidth, args.dpi, args.horizontal, args.y_annot, args.points, args.points_jitter, args.x_order_seen)
 

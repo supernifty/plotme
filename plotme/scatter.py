@@ -285,6 +285,13 @@ def plot_scatter(data_fh, target, xlabel, ylabel, zlabel, figsize=12, fontsize=1
     if not nolegend:
       ax.legend()
 
+  # LOESS / LOWESS smoothing
+  if loess:
+    smoothed = lowess(safe_yvals, safe_xvals, frac=loess_frac, return_sorted=True)
+    ax.plot(smoothed[:, 0], smoothed[:, 1], color='green', label=f'LOESS frac={loess_frac}', linewidth=1)
+    if not nolegend:
+      ax.legend()
+
   if density: # assume by category
     if len(zvals_seen) > 0:
       for idx, zval in enumerate(zvals_seen):
@@ -404,6 +411,8 @@ if __name__ == '__main__':
   parser.add_argument('--density_resolution', required=False, default=100, type=int, help='add a density overlay')
   parser.add_argument('--density_markersize', required=False, type=int, help='add a density overlay')
   parser.add_argument('--density_opacity', required=False, type=float, default=0.5, help='opacity of density overlay')
+  parser.add_argument('--loess', action='store_true', help='add a LOESS/LOWESS smoothed line')
+  parser.add_argument('--loess_frac', type=float, default=0.3, help='fraction of data used for LOESS smoothing')
   parser.add_argument('--nolegend', action='store_true', help='do not add a legend')
   parser.add_argument('--verbose', action='store_true', help='more logging')
   parser.add_argument('--target', required=False, default='plot.png', help='plot filename')

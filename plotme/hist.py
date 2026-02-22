@@ -12,6 +12,7 @@ import math
 import sys
 
 import numpy as np
+import scipy.stats
 
 import matplotlib
 matplotlib.use('Agg')
@@ -64,9 +65,9 @@ def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fi
   logging.debug('stacked is %s', stacked)
     #plt.hist([ads, ads_nopass], label=('PASS', 'No PASS'), bins=int(max(ads + ads_nopass) * 100), stacked=False)
   if bins is not None:
-    hy, hx, _ = plt.hist([results[key] for key in sorted(results)], label=[key for key in sorted(results)], bins=bins, stacked=stacked, density=normalise)
+    hy, hx, _ = plt.hist([results[key] for key in sorted(results)], label=[key for key in sorted(results)], bins=bins, stacked=stacked, density=normalise, edgecolor='black', linewidth=1)
   else:
-    hy, hx, _ = plt.hist([results[key] for key in sorted(results)], label=[key for key in sorted(results)], stacked=stacked, density=normalise)
+    hy, hx, _ = plt.hist([results[key] for key in sorted(results)], label=[key for key in sorted(results)], stacked=stacked, density=normalise, edgecolor='black', linewidth=1)
 
   if stats:
     # calculate mean of each key
@@ -74,6 +75,12 @@ def plot_hist(data_fh, target, label_col, value_col, title, x_label, y_label, fi
       mean = np.mean(results[key])
       plt.axvline(x=mean, label='{} mean {:.2f}'.format(key, mean), ls=':')
       plt.text(mean, hy.max(), '{} mean'.format(key), ha='right', va='top', rotation=90)
+    # pvalue
+    if len(results) == 2:
+      keys = [k for k in results]
+      t, p = scipy.stats.ttest_ind(results[keys[0]], results[keys[1]])
+      logging.info('p-value: %e', p)
+    #elif len(results) > 2:
 
   if x_annot is not None:
     for xa in x_annot: # of the form label=height

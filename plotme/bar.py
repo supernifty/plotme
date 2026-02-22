@@ -107,6 +107,8 @@ def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
       yerr = [cis.get('{},{}'.format(x, yvals[idx]), (0, 0)) for x in xvals] # each xval with that yval
       yerr = [[item[0] for item in yerr], [item[1] for item in yerr]]
       logging.info(yerr)
+    else:
+      yerr = None
 
     if bottom is None:
       bottom = [0] * len(vals)
@@ -156,10 +158,15 @@ def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
             if cat == label:
               rect.set_color(col)
 
+      rect.set_edgecolor('black')
+      rect.set_linewidth(1)
+
     if bottom is None:
       bottom = vals
     else:
       bottom = [x[0] + x[1] for x in zip(bottom, vals)]
+
+
     logging.debug('vals is %s bottom is %s', vals, bottom)
         
 

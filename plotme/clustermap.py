@@ -43,7 +43,7 @@ def choose_k(data, col_linkage, min_cluster_size=4):
 
   return best[1]
 
-def plot_clustermap(ifh, delimiter, target, y, indicator, width, height, switch, separate=True, min_cluster_size=4, write_cluster=None):
+def plot_clustermap(ifh, delimiter, target, y, indicator, width, height, switch, separate=True, min_cluster_size=4, write_cluster=None, cmap='plasma'):
   logging.info('reading from stdin...')
   df = pd.read_csv(ifh, sep=delimiter)
   df = df.set_index(y)
@@ -64,7 +64,7 @@ def plot_clustermap(ifh, delimiter, target, y, indicator, width, height, switch,
   #x = sns.clustermap(df, z_score=1, cmap='vlag', method='average', metric="correlation", row_colors=row_colors, figsize=(width, height)) # normalise
   if switch:
     df = df.T
-  x = sns.clustermap(df, z_score=1, cmap='plasma', metric="cosine", dendrogram_ratio=(.1, .1), row_colors=row_colors, figsize=(width, height)) # normalise
+  x = sns.clustermap(df, z_score=1, cmap=cmap, metric="cosine", dendrogram_ratio=(.1, .1), row_colors=row_colors, figsize=(width, height)) # normalise
 
   if separate:
     col_linkage = x.dendrogram_col.linkage
@@ -109,10 +109,11 @@ if __name__ == '__main__':
   parser.add_argument('--separate', action='store_true', help='separate clusters')
   parser.add_argument('--min_cluster_size', default=4, type=int, help='min cluster size')
   parser.add_argument('--write_cluster', required=False, help='write cluster assignments to filename')
+  parser.add_argument('--cmap', required=False, default='plasma', help='cmap for clustermap')
   parser.add_argument('--verbose', action='store_true', help='more logging')
   args = parser.parse_args()
   if args.verbose:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.DEBUG)
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
-  plot_clustermap(sys.stdin, args.delimiter, args.target, args.y, args.indicator, args.width, args.height, args.switch_axes, args.separate, args.min_cluster_size, args.write_cluster)
+  plot_clustermap(sys.stdin, args.delimiter, args.target, args.y, args.indicator, args.width, args.height, args.switch_axes, args.separate, args.min_cluster_size, args.write_cluster, args.cmap)

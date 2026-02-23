@@ -13,7 +13,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pylab import rcParams
 
-def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, xlabel_rotation, category, colours, stacked, z_annot, x_label_add_n, annot_color, y_annot, x_order_seen, dpi=300, ci_low=None, ci_high=None):
+def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x_order, y_order, fig_width, fig_height, fontsize, xlabel_rotation, category, colours, stacked, z_annot, x_label_add_n, annot_color, y_annot, x_order_seen, dpi=300, ci_low=None, ci_high=None, legend_title=None):
   '''
     xlabel: groups on x axis
     ylabel: colours
@@ -200,7 +200,7 @@ def plot_bar(data_fh, target, xlabel, ylabel, zlabel, title, x_label, y_label, x
     labels_seen.add(label)
     labels_u.append(label)
     handles_u.append(handle)
-  lgd = ax.legend(handles_u, labels_u, loc='upper left', bbox_to_anchor=(1.01,1.0), borderaxespad=0)
+  lgd = ax.legend(handles_u, labels_u, loc='upper left', bbox_to_anchor=(1.01,1.0), borderaxespad=0, title=legend_title, fontsize=fontsize)
   lgd.get_frame().set_edgecolor('#000000')
 
   #fig = plt.figure(figsize=(figsize, 1 + int(figsize * len(yvals) / len(xvals))))
@@ -223,6 +223,7 @@ if __name__ == '__main__':
   parser.add_argument('--category', required=False, help='additional category column')
   parser.add_argument('--colours', required=False, nargs='*', help='category colours')
   parser.add_argument('--title', required=False, help='z column name')
+  parser.add_argument('--legend_title', required=False, help='legend title')
   parser.add_argument('--y_label', required=False, help='label on y axis')
   parser.add_argument('--x_label', required=False, help='label on x axis')
   parser.add_argument('--x_label_add_n', action='store_true', help='label on x axis')
@@ -244,5 +245,5 @@ if __name__ == '__main__':
   else:
     logging.basicConfig(format='%(asctime)s %(levelname)s %(message)s', level=logging.INFO)
 
-  plot_bar(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.x_label_rotation, args.category, args.colours, args.stacked, args.z_annot, args.x_label_add_n, args.annot_color, args.y_annot, args.x_order_seen, args.dpi, args.ci_low, args.ci_high)
+  plot_bar(sys.stdin, args.target, args.x, args.y, args.z, args.title, args.x_label, args.y_label, args.x_order, args.y_order, args.width, args.height, args.fontsize, args.x_label_rotation, args.category, args.colours, args.stacked, args.z_annot, args.x_label_add_n, args.annot_color, args.y_annot, args.x_order_seen, args.dpi, args.ci_low, args.ci_high, args.legend_title)
 
